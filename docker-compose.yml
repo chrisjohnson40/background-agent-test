@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: garage-inventory-db
+    environment:
+      POSTGRES_DB: garage_inventory
+      POSTGRES_USER: garage_user
+      POSTGRES_PASSWORD: garage_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - garage-network
+
+  # .NET API
+  api:
+    build:
+      context: ./src
+      dockerfile: GarageInventory.API/Dockerfile
+    container_name: garage-inventory-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=garage_inventory;Username=garage_user;Password=garage_password
+    ports:
+      - "5000:80"
+    depends_on:
+      - postgres
+    networks:
+      - garage-network
+    volumes:
+      - ./src:/src
+    develop:
+      watch:
+        - action: rebuild
+          path: ./src
+          target: /src
+
+  # Angular Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: garage-inventory-frontend
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - garage-network
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/src
+          target: /app/src
+
+  # Redis for caching (optional for future use)
+  redis:
+    image: redis:7-alpine
+    container_name: garage-inventory-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - garage-network
+
+volumes:
+  postgres_data:
+
+networks:
+  garage-network:
+    driver: bridge
