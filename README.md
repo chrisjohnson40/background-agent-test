@@ -13,8 +13,6 @@ This project follows **Onion Architecture** principles with clear separation of 
 - **Presentation Layer**: API controllers and middleware
 
 ### Frontend (Angular 20)
-- **Zoneless Architecture**: Latest Angular features without zone.js
-- **Server-Side Rendering**: Enhanced performance and SEO
 - **Standalone Components**: Modern Angular component architecture
 - **Angular Material**: Consistent UI components
 
@@ -53,7 +51,7 @@ This project follows **Onion Architecture** principles with clear separation of 
 - **BCrypt.Net**: Password hashing
 
 ### Frontend
-- **Angular 20**: Latest Angular with zoneless architecture
+- **Angular 20**: Latest Angular framework
 - **Angular Material**: UI component library
 - **TypeScript**: Type-safe JavaScript
 - **SCSS**: Enhanced CSS with variables and mixins
