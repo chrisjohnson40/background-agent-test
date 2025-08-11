@@ -69,3 +69,48 @@ coverage/
 # Temporary files
 temp/
 tmp/
+
+# AI Orchestrator artifacts
+agents/orchestrator/planner_output.json
+*.planner_output.json
+agents/orchestrator/mock_planner_output.json
+agents/orchestrator/validation_*.json
+agents/orchestrator/*.egg-info/
+agents/orchestrator/__pycache__/
+agents/orchestrator/*.py[cod]
+agents/orchestrator/*$py.class
+
+# Python artifacts (general)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# API Keys and sensitive files (extra safety)
+openai_key.txt
+api_keys.txt
+*.key
+secrets/
+
+# Python virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+planner_output.json

@@ -1,0 +1,34 @@
+name: Plan feature into issues
+on:
+  workflow_dispatch:
+    inputs:
+      spec_path:
+        description: "Path to feature spec (e.g., docs/ai/my-feature.md)"
+        required: true
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # or ANTHROPIC_API_KEY with langchain-anthropic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install -e ./agents/orchestrator
+      - name: Create labels (idempotent)
+        run: |
+          gh label create fix-me --color FF8C00 --description "Trigger OpenHands" || true
+          gh label create api --color 0366d6 || true
+          gh label create ui --color 0e8a16 || true
+          gh label create infra --color 5319e7 || true
+          gh label create docs --color 1d76db || true
+          gh label create test --color d93f0b || true
+          gh label create p1 --color b60205 || true
+          gh label create p2 --color d93f0b || true
+          gh label create p3 --color fef2c0 || true
+      - name: Plan & create issues
+        run: plan "${{ github.event.inputs.spec_path }}"

@@ -1,11 +1,13 @@
 # Cursor AI Rules for Garage Inventory Management System
 
 ## Project Overview
+
 This is an Angular + .NET garage inventory management system using Onion Architecture, with support for multiple background agents.
 
 ## Architecture Guidelines
 
 ### Backend (.NET API)
+
 - **Follow Onion Architecture strictly**:
   - Core/Domain: Business entities, interfaces, domain services
   - Application: Use cases, DTOs, application services
@@ -18,6 +20,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 - Implement **Unit of Work** pattern for transactions
 
 ### Frontend (Angular)
+
 - Follow **Angular Style Guide**
 - Use **Standalone components** (Angular 14+)
 - Implement **OnPush change detection** where possible
@@ -27,6 +30,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 - Implement **State management** with NgRx (if needed)
 
 ### Database Design
+
 - Use **PostgreSQL** as primary database
 - Apply **proper normalization** (3NF minimum)
 - Use **meaningful naming conventions**
@@ -35,6 +39,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 - Use **UUIDs** for primary keys where appropriate
 
 ### Authentication & Security
+
 - Start with **JWT tokens** for simplicity
 - Design for **future OAuth2/OIDC integration**
 - Implement **role-based authorization**
@@ -43,6 +48,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 - Validate **all inputs** on both client and server
 
 ### Docker & DevOps
+
 - Use **multi-stage builds** for optimization
 - Implement **health checks** in containers
 - Use **docker-compose** for local development
@@ -52,6 +58,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Code Quality Standards
 
 ### General Rules
+
 - **Write tests first** (TDD approach preferred)
 - **Keep functions small** (max 20-30 lines)
 - **Use meaningful names** for variables, functions, classes
@@ -60,6 +67,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 - **Apply DRY principle** but avoid premature abstraction
 
 ### Error Handling
+
 - Use **structured exception handling**
 - Implement **global error handlers**
 - Log **all errors** with appropriate levels
@@ -67,6 +75,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 - Never expose **internal details** in error messages
 
 ### Performance Guidelines
+
 - **Lazy load** Angular modules where possible
 - Use **async/await** properly in .NET
 - Implement **caching strategies** for frequently accessed data
@@ -76,18 +85,21 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Background Agent Guidelines
 
 ### Task Assignment
+
 - Assign **specific, well-defined tasks** to background agents
 - Provide **clear acceptance criteria**
 - Include **relevant context** and constraints
 - Specify **testing requirements**
 
 ### Agent Collaboration
+
 - Use **clear interfaces** between components worked on by different agents
 - Implement **integration tests** to verify agent work compatibility
 - Maintain **shared documentation** for cross-agent understanding
 - Use **consistent coding standards** across all agent work
 
 ### Code Review Process
+
 - Background agents should **create PRs** for review
 - Include **comprehensive test coverage**
 - Add **clear commit messages** explaining changes
@@ -120,18 +132,21 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Naming Conventions
 
 ### C# (.NET)
+
 - **PascalCase**: Classes, methods, properties, namespaces
 - **camelCase**: Local variables, parameters
 - **UPPER_CASE**: Constants
 - **Prefix interfaces with 'I'**: IRepository, IService
 
 ### TypeScript (Angular)
+
 - **PascalCase**: Classes, interfaces, types, enums
 - **camelCase**: Variables, functions, properties
 - **kebab-case**: File names, component selectors
 - **UPPER_SNAKE_CASE**: Constants
 
 ### Database
+
 - **snake_case**: Table names, column names
 - **Plural table names**: users, inventory_items, locations
 - **Descriptive foreign key names**: user_id, location_id
@@ -139,12 +154,14 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Testing Strategy
 
 ### Backend Testing
+
 - **Unit tests**: Domain logic, application services
 - **Integration tests**: API endpoints, database operations
 - **Test coverage**: Minimum 80% for business logic
 - **Use test doubles**: Mocks, stubs for external dependencies
 
 ### Frontend Testing
+
 - **Unit tests**: Components, services, pipes
 - **Integration tests**: Component interactions
 - **E2E tests**: Critical user workflows
@@ -153,12 +170,14 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Documentation Requirements
 
 ### Code Documentation
+
 - **XML comments** for public APIs (.NET)
 - **JSDoc comments** for TypeScript public methods
 - **README files** for each major component
 - **Architecture decision records** (ADRs) for significant choices
 
 ### API Documentation
+
 - **OpenAPI/Swagger** for REST endpoints
 - **Include examples** for request/response bodies
 - **Document error responses**
@@ -167,12 +186,14 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Environment Configuration
 
 ### Development
+
 - Use **local Docker containers** for databases
 - **Hot reload** enabled for both frontend and backend
 - **Detailed logging** enabled
 - **Development-specific configurations**
 
 ### Production Considerations
+
 - **Environment-specific configs** via environment variables
 - **Secure secret management**
 - **Optimized Docker images**
@@ -181,12 +202,14 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Git Workflow
 
 ### Branching Strategy
+
 - **main**: Production-ready code
 - **develop**: Integration branch
 - **feature/***: Feature development
 - **hotfix/***: Critical fixes
 
 ### Commit Messages
+
 - Use **conventional commits** format
 - Include **ticket/issue numbers** where applicable
 - Write **clear, descriptive messages**
@@ -195,6 +218,7 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 ## Background Agent Specific Rules
 
 ### When Creating New Features
+
 1. **Start with domain models** and interfaces
 2. **Implement business logic** in domain/application layers
 3. **Add infrastructure implementations**
@@ -202,12 +226,14 @@ This is an Angular + .NET garage inventory management system using Onion Archite
 5. **Write tests** throughout the process
 
 ### When Modifying Existing Code
+
 1. **Understand existing patterns** before making changes
 2. **Maintain backward compatibility** when possible
 3. **Update tests** to reflect changes
 4. **Update documentation** as needed
 
 ### Communication Between Agents
+
 - **Use clear, descriptive branch names**
 - **Document breaking changes** in commit messages
 - **Create detailed PR descriptions**
