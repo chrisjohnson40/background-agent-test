@@ -1,0 +1,30 @@
+name: Auto-Fix Tagged Issue with OpenHands
+on:
+  issues:
+    types: [labeled, opened, edited]
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [labeled]
+
+jobs:
+  resolve:
+    if: |
+      (github.event_name == 'issues' && contains(join(github.event.issue.labels.*.name, ','), 'fix-me')) ||
+      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '@openhands-agent')) ||
+      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'fix-me'))
+    runs-on: ${{ vars.TARGET_RUNNER || 'ubuntu-latest' }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run OpenHands Resolver
+        uses: All-Hands-AI/openhands@v0.51
+        with:
+          mode: "resolver"              # use the built-in resolver
+          llm_model: ${{ vars.LLM_MODEL || 'anthropic/claude-sonnet-4-20250514' }}
+          max_iterations: ${{ vars.OPENHANDS_MAX_ITER || 8 }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
