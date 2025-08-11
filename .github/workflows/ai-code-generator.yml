@@ -1,9 +1,7 @@
-name: AI Code Generator
+name: AI Code Generator (DISABLED)
 on:
-  issues:
-    types: [labeled]
-  issue_comment:
-    types: [created]
+  # Disabled to focus on OpenHands
+  workflow_dispatch:
 
 jobs:
   generate-code:
@@ -157,6 +155,10 @@ jobs:
                   json_content = ai_response
               
               files_data = json.loads(json_content)
+              
+              # Configure git identity
+              subprocess.run(['git', 'config', 'user.name', 'AI Code Generator'], check=True)
+              subprocess.run(['git', 'config', 'user.email', 'ai-generator@github-actions.com'], check=True)
               
               # Create branch
               branch_name = f"ai-feature-issue-{issue_number}"

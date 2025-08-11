@@ -1,9 +1,7 @@
-name: Simple AI Issue Resolver
+name: Simple AI Issue Resolver (DISABLED)
 on:
-  issues:
-    types: [labeled, opened, edited]
-  issue_comment:
-    types: [created]
+  # Disabled to focus on OpenHands
+  workflow_dispatch:
 
 jobs:
   resolve:
