@@ -60,5 +60,5 @@ jobs:
                 --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5-2025-08-07' }} \
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
                 --output-dir /workspace/openhands-output \
-                --runtime-container-image ghcr.io/all-hands-ai/runtime:0.51.1-nikolaik
+                --runtime local
             "
