@@ -31,6 +31,7 @@ jobs:
             python -m openhands.resolver.resolve_issue \
             --selected-repo ${{ github.repository }} \
             --issue-number ${{ github.event.issue.number }} \
+            --username ${{ github.actor }} \
+            --token ${{ secrets.GITHUB_TOKEN }} \
             --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5' }} \
-            --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
-            --token ${{ secrets.GITHUB_TOKEN }}
+            --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }}
