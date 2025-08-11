@@ -41,7 +41,7 @@ jobs:
               apt-get update && apt-get install -y git
               git config --global user.name 'openhands-bot'
               git config --global user.email 'openhands-bot@users.noreply.github.com'
-              /openhands/micromamba/bin/micromamba run -n openhands poetry run python -m openhands.resolver.resolve_issue \
+              python -m openhands.resolver.resolve_issue \
                 --selected-repo ${{ github.repository }} \
                 --issue-number ${{ github.event.issue.number }} \
                 --username ${{ github.actor }} \
