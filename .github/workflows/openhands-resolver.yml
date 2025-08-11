@@ -21,11 +21,17 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v4
+
       - name: Run OpenHands Resolver (Docker)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SANDBOX_VOLUMES: ${{ github.workspace }}:/workspace:rw
+          # LLM retry tuning per docs
+          LLM_NUM_RETRIES: "4"
+          LLM_RETRY_MIN_WAIT: "5"
+          LLM_RETRY_MAX_WAIT: "30"
+          LLM_RETRY_MULTIPLIER: "2"
         run: |
           docker run --rm --privileged \
             -v ${{ github.workspace }}:/workspace \
@@ -34,19 +40,23 @@ jobs:
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
             -e SANDBOX_VOLUMES="${{ github.workspace }}:/workspace:rw" \
+            -e LLM_NUM_RETRIES="${LLM_NUM_RETRIES}" \
+            -e LLM_RETRY_MIN_WAIT="${LLM_RETRY_MIN_WAIT}" \
+            -e LLM_RETRY_MAX_WAIT="${LLM_RETRY_MAX_WAIT}" \
+            -e LLM_RETRY_MULTIPLIER="${LLM_RETRY_MULTIPLIER}" \
             --entrypoint /bin/bash \
-            ghcr.io/all-hands-ai/openhands:latest \
+            ghcr.io/all-hands-ai/openhands:0.51.1 \
             -lc "
               set -e
               apt-get update && apt-get install -y git
               git config --global user.name 'openhands-bot'
               git config --global user.email 'openhands-bot@users.noreply.github.com'
-              /openhands/micromamba/bin/micromamba run -n openhands poetry run python -m openhands.resolver.resolve_issue \
+              /app/.venv/bin/python -m openhands.resolver.resolve_issue \
                 --selected-repo ${{ github.repository }} \
                 --issue-number ${{ github.event.issue.number }} \
                 --username ${{ github.actor }} \
                 --token ${{ secrets.GITHUB_TOKEN }} \
-                --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5' }} \
+                --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5-2025-08-07' }} \
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
                 --output-dir /workspace/openhands-output \
                 --runtime-container-image ghcr.io/all-hands-ai/runtime:0.51.1
