@@ -29,7 +29,8 @@ jobs:
             -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
             ghcr.io/all-hands-ai/openhands:latest \
             python -m openhands.resolver.resolve_issue \
-            --repo ${{ github.repository }} \
+            --selected-repo ${{ github.repository }} \
             --issue-number ${{ github.event.issue.number }} \
             --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5' }} \
-            --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }}
+            --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
+            --token ${{ secrets.GITHUB_TOKEN }}
