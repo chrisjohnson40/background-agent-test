@@ -21,10 +21,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run OpenHands Resolver
-        uses: All-Hands-AI/openhands@v0.51
-        with:
-          mode: "resolver"              # use the built-in resolver
-          llm_model: ${{ vars.LLM_MODEL || 'anthropic/claude-sonnet-4-20250514' }}
-          max_iterations: ${{ vars.OPENHANDS_MAX_ITER || 8 }}
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            -e ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            ghcr.io/all-hands-ai/openhands:latest \
+            python -m openhands.resolver.resolve_issue \
+            --repo ${{ github.repository }} \
+            --issue-number ${{ github.event.issue.number }} \
+            --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5' }} \
+            --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }}
