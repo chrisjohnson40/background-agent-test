@@ -21,29 +21,33 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v4
-      - name: Run OpenHands Resolver
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install OpenHands
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -w /workspace \
-            -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-            -e ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
-            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
-            --entrypoint /bin/bash \
-            ghcr.io/all-hands-ai/openhands:latest \
-            -c "
-              set -e
-              echo 'Installing Git...'
-              apt-get update && apt-get install -y git
-              echo 'Starting OpenHands resolver...'
-              python -m openhands.resolver.resolve_issue \
-                --selected-repo ${{ github.repository }} \
-                --issue-number ${{ github.event.issue.number }} \
-                --username ${{ github.actor }} \
-                --token ${{ secrets.GITHUB_TOKEN }} \
-                --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5' }} \
-                --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
-                --output-dir /workspace/openhands-output
-              echo 'OpenHands resolver completed'
-            "
+          pip install openhands-ai
+          
+      - name: Configure Docker for OpenHands
+        run: |
+          # Ensure Docker daemon is running
+          sudo systemctl start docker
+          sudo usermod -aG docker $USER
+          
+      - name: Run OpenHands Resolver
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Use OpenHands directly on the runner instead of in Docker
+          python -m openhands.resolver.resolve_issue \
+            --selected-repo ${{ github.repository }} \
+            --issue-number ${{ github.event.issue.number }} \
+            --username ${{ github.actor }} \
+            --token ${{ secrets.GITHUB_TOKEN }} \
+            --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-4o' }} \
+            --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
+            --output-dir ./openhands-output
