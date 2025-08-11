@@ -28,7 +28,12 @@ jobs:
           
       - name: Install OpenHands
         run: |
-          pip install openhands-ai
+          python -m pip install --upgrade pip setuptools wheel
+          # Resolve dependency conflicts proactively
+          python -m pip uninstall -y e2b || true
+          python -m pip install "e2b>=0.17.1,<0.18.0"
+          # Pin to a known working OpenHands build
+          python -m pip install --no-cache-dir "openhands-ai==0.9.8"
           
       - name: Configure Docker for OpenHands
         run: |
@@ -39,8 +44,14 @@ jobs:
       - name: Run OpenHands Resolver
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Mount repo into the agent runtime container
+          SANDBOX_VOLUMES: ${{ github.workspace }}:/workspace:rw
+          # Ensure commits have an identity
+          GIT_AUTHOR_NAME: openhands-bot
+          GIT_AUTHOR_EMAIL: openhands-bot@users.noreply.github.com
+          GIT_COMMITTER_NAME: openhands-bot
+          GIT_COMMITTER_EMAIL: openhands-bot@users.noreply.github.com
         run: |
           # Use OpenHands directly on the runner instead of in Docker
           python -m openhands.resolver.resolve_issue \
@@ -48,6 +59,6 @@ jobs:
             --issue-number ${{ github.event.issue.number }} \
             --username ${{ github.actor }} \
             --token ${{ secrets.GITHUB_TOKEN }} \
-            --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-4o' }} \
+            --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5' }} \
             --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
             --output-dir ./openhands-output
