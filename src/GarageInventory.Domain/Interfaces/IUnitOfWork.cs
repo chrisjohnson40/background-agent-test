@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using GarageInventory.Domain.Entities;
 
 namespace GarageInventory.Domain.Interfaces;
 
