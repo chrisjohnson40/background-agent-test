@@ -49,9 +49,11 @@ jobs:
             ghcr.io/all-hands-ai/openhands:0.51.1 \
             -lc "
               set -e
-              apt-get update && apt-get install -y git
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update && apt-get install -y --no-install-recommends git tmux
               git config --global user.name 'openhands-bot'
               git config --global user.email 'openhands-bot@users.noreply.github.com'
+              export TERM=xterm
               /app/.venv/bin/python -m openhands.resolver.resolve_issue \
                 --selected-repo ${{ github.repository }} \
                 --issue-number ${{ github.event.issue.number }} \
