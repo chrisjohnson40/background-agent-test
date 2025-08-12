@@ -39,6 +39,10 @@ jobs:
             -w /workspace \
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -e GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -e GITHUB_REPOSITORY="${{ github.repository }}" \
+            -e GITHUB_OWNER="${{ github.repository_owner }}" \
+            -e GITHUB_API_URL="https://api.github.com" \
             -e LLM_MODEL="${{ vars.LLM_MODEL || 'openai/gpt-5-2025-08-07' }}" \
             -e SANDBOX_VOLUMES="${{ github.workspace }}:/workspace:rw" \
             -e LLM_NUM_RETRIES="${LLM_NUM_RETRIES}" \
