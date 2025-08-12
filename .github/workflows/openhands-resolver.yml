@@ -53,28 +53,36 @@ jobs:
             ghcr.io/all-hands-ai/openhands:0.51.1 \
             -lc '
               set -e
+              set -x
               export DEBIAN_FRONTEND=noninteractive
+              echo "[resolver] installing packages..."
               apt-get update && apt-get install -y --no-install-recommends git tmux curl
+              echo "[resolver] packages installed."
               git config --global user.name "openhands-bot"
               git config --global user.email "openhands-bot@users.noreply.github.com"
               export TERM=xterm
               # Ensure git config works inside runtime
               # Replace system git with a wrapper to sanitize env for ALL git calls
               if [ -x /usr/bin/git ] && [ ! -x /usr/bin/git.real ]; then mv /usr/bin/git /usr/bin/git.real; fi
+              echo "[resolver] installing git wrapper..."
               printf '%s\n' '#!/bin/sh' \
                 'unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM GIT_CONFIG_COUNT' \
                 'exec /usr/bin/git.real "$@"' > /usr/bin/git
               chmod +x /usr/bin/git
+              echo "[resolver] git wrapper installed."
               unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM || true
               git config --global core.pager "" || true
               git config --global --add safe.directory /workspace || true
+              echo "[resolver] ensuring playwright browsers..."
               /app/.venv/bin/playwright install chromium || true
               /app/.venv/bin/playwright install-deps chromium || true
+              echo "[resolver] playwright ready."
 
               # Determine issue number robustly across events
               ISSUE_NUMBER="${{ github.event.issue.number }}"
               if [ -z "${ISSUE_NUMBER}" ]; then ISSUE_NUMBER="${{ github.event.pull_request.number }}"; fi
               if [ -z "${ISSUE_NUMBER}" ]; then echo "ERROR: No issue number found in event payload"; exit 1; fi
+              echo "[resolver] issue number: ${ISSUE_NUMBER}"
 
               # Debug info (safe: no secrets)
               echo "::group::OpenHands Debug"
@@ -93,6 +101,7 @@ jobs:
               CURL_RC=$?
               set -e
               if [ $CURL_RC -ne 0 ]; then echo "ERROR: Issue ${ISSUE_NUMBER} not found via API for ${GITHUB_REPOSITORY}"; exit 1; fi
+              echo "[resolver] issue exists via API. launching resolver..."
               env -i \
                 OPENAI_API_KEY="${OPENAI_API_KEY}" \
                 GITHUB_TOKEN="${GITHUB_TOKEN}" \
@@ -116,4 +125,19 @@ jobs:
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
                 --output-dir /workspace/openhands-output \
                 --runtime local
+              RES_RC=$?
+              echo "[resolver] resolver exit code: ${RES_RC}"
+              echo "[resolver] listing /workspace/openhands-output:"
+              ls -la /workspace/openhands-output || true
+              if [ -f /workspace/openhands-output/output.jsonl ]; then
+                echo "[resolver] tail output.jsonl:"
+                tail -n 200 /workspace/openhands-output/output.jsonl || true
+              else
+                echo "[resolver] no output.jsonl present."
+              fi
+              # Fail if no PR or no output to make it visible
+              if [ ${RES_RC} -ne 0 ]; then exit ${RES_RC}; fi
+              if ! grep -q '"pull_request":' /workspace/openhands-output/output.jsonl 2>/dev/null; then
+                echo "[resolver] no PR detected in output; consider increasing iterations or checking issue content.";
+              fi
             '
