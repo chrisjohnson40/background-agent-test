@@ -58,8 +58,8 @@ jobs:
               echo "[resolver] installing packages..."
               apt-get update && apt-get install -y --no-install-recommends git tmux curl
               echo "[resolver] packages installed."
-              git config --global user.name "openhands-bot"
-              git config --global user.email "openhands-bot@users.noreply.github.com"
+              git config --global user.name "github-actions[bot]"
+              git config --global user.email "github-actions[bot]@users.noreply.github.com"
               export TERM=xterm
               # Ensure git config works inside runtime
               # Replace system git with a wrapper to sanitize env for ALL git calls
@@ -74,11 +74,11 @@ jobs:
               git config --global core.pager "" || true
               git config --global --add safe.directory /workspace || true
               git config --global --add safe.directory /workspace/openhands-output/repo || true
-              # Fix permissions for OpenHands runtime user to avoid index.lock permission denied
+              # Fix permissions for OpenHands runtime user (UID 42420) to avoid index.lock permission denied
               echo "[resolver] fixing workspace ownership for openhands user..."
               chown -R 42420:42420 /workspace || true
               chmod -R 775 /workspace || true
-              # Create openhands output directory with proper permissions
+              # Create output directory with proper permissions
               mkdir -p /workspace/openhands-output || true
               chown -R 42420:42420 /workspace/openhands-output || true
               echo "[resolver] ensuring playwright browsers..."
@@ -116,6 +116,9 @@ jobs:
                 INSTRUCTIONS_ARGS="--repo-instruction-file /workspace/.openhands_instructions"
                 echo "[resolver] using custom instructions file at /workspace/.openhands_instructions"
               fi
+              # Configure git for pushing
+              git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git || true
+              
               env -i \
                 OPENAI_API_KEY="${OPENAI_API_KEY}" \
                 GITHUB_TOKEN="${GITHUB_TOKEN}" \
@@ -148,12 +151,33 @@ jobs:
               if [ -f /workspace/openhands-output/output.jsonl ]; then
                 echo "[resolver] tail output.jsonl:"
                 tail -n 200 /workspace/openhands-output/output.jsonl || true
+                echo "[resolver] checking for PR creation in output:"
+                grep -i "pull_request\|error\|exception" /workspace/openhands-output/output.jsonl | tail -n 20 || true
               else
                 echo "[resolver] no output.jsonl present."
               fi
-              # Fail if no PR or no output to make it visible
-              if [ ${RES_RC} -ne 0 ]; then exit ${RES_RC}; fi
+              
+              # Check if repo directory exists and has changes
+              if [ -d /workspace/openhands-output/repo ]; then
+                echo "[resolver] checking git status in repo:"
+                cd /workspace/openhands-output/repo && git status || true
+                cd /workspace
+              fi
+              
+              # Fail if resolver failed
+              if [ ${RES_RC} -ne 0 ]; then 
+                echo "[resolver] ERROR: Resolver failed with exit code ${RES_RC}"
+                exit ${RES_RC}
+              fi
+              
+              # Check if PR was created
               if ! grep -q '"pull_request":' /workspace/openhands-output/output.jsonl 2>/dev/null; then
-                echo "[resolver] no PR detected in output; consider increasing iterations or checking issue content.";
+                echo "[resolver] WARNING: No PR detected in output. The agent may have completed work but failed to create a PR."
+                echo "[resolver] This could be due to:"
+                echo "  - Insufficient iterations to complete the task"
+                echo "  - Git/GitHub API authentication issues"
+                echo "  - The agent determining no changes were needed"
+              else
+                echo "[resolver] SUCCESS: Pull request created!"
               fi
             '
