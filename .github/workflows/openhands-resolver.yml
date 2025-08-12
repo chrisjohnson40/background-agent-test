@@ -51,12 +51,12 @@ jobs:
             -e LLM_RETRY_MULTIPLIER="${LLM_RETRY_MULTIPLIER}" \
             --entrypoint /bin/bash \
             ghcr.io/all-hands-ai/openhands:0.51.1 \
-            -lc "
+            -lc '
               set -e
               export DEBIAN_FRONTEND=noninteractive
               apt-get update && apt-get install -y --no-install-recommends git tmux curl
-              git config --global user.name 'openhands-bot'
-              git config --global user.email 'openhands-bot@users.noreply.github.com'
+              git config --global user.name "openhands-bot"
+              git config --global user.email "openhands-bot@users.noreply.github.com"
               export TERM=xterm
               # Ensure git config works inside runtime
               unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM || true
@@ -83,7 +83,7 @@ jobs:
               # Verify issue exists via API before launching
               set +e
               curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
-                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}" | grep -q '"number":' 
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}" | grep -q "\"number\":"
               CURL_RC=$?
               set -e
               if [ $CURL_RC -ne 0 ]; then echo "ERROR: Issue ${ISSUE_NUMBER} not found via API for ${GITHUB_REPOSITORY}"; exit 1; fi
@@ -110,4 +110,4 @@ jobs:
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
                 --output-dir /workspace/openhands-output \
                 --runtime local
-            "
+            '
