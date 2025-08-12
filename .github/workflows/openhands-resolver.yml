@@ -54,7 +54,7 @@ jobs:
             -lc "
               set -e
               export DEBIAN_FRONTEND=noninteractive
-              apt-get update && apt-get install -y --no-install-recommends git tmux
+              apt-get update && apt-get install -y --no-install-recommends git tmux curl
               git config --global user.name 'openhands-bot'
               git config --global user.email 'openhands-bot@users.noreply.github.com'
               export TERM=xterm
@@ -64,6 +64,29 @@ jobs:
               git config --global --add safe.directory /workspace || true
               /app/.venv/bin/playwright install chromium || true
               /app/.venv/bin/playwright install-deps chromium || true
+
+              # Determine issue number robustly across events
+              ISSUE_NUMBER="${{ github.event.issue.number }}"
+              if [ -z "${ISSUE_NUMBER}" ]; then ISSUE_NUMBER="${{ github.event.pull_request.number }}"; fi
+              if [ -z "${ISSUE_NUMBER}" ]; then echo "ERROR: No issue number found in event payload"; exit 1; fi
+
+              # Debug info (safe: no secrets)
+              echo "::group::OpenHands Debug"
+              echo "Repo=${GITHUB_REPOSITORY}"
+              echo "Owner=${GITHUB_OWNER}"
+              echo "Actor=${{ github.actor }}"
+              echo "Issue=${ISSUE_NUMBER}"
+              echo "Model=${LLM_MODEL}"
+              echo "Runtime=local"
+              echo "::endgroup::"
+
+              # Verify issue exists via API before launching
+              set +e
+              curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}" | grep -q '"number":' 
+              CURL_RC=$?
+              set -e
+              if [ $CURL_RC -ne 0 ]; then echo "ERROR: Issue ${ISSUE_NUMBER} not found via API for ${GITHUB_REPOSITORY}"; exit 1; fi
               env -i \
                 OPENAI_API_KEY="${OPENAI_API_KEY}" \
                 GITHUB_TOKEN="${GITHUB_TOKEN}" \
@@ -80,7 +103,7 @@ jobs:
                 TERM="${TERM}" \
                 /app/.venv/bin/python /app/openhands/resolver/resolve_issue.py \
                 --selected-repo ${{ github.repository }} \
-                --issue-number ${{ github.event.issue.number }} \
+                --issue-number ${ISSUE_NUMBER} \
                 --username ${{ github.actor }} \
                 --token ${{ secrets.GITHUB_TOKEN }} \
                 --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5-2025-08-07' }} \
