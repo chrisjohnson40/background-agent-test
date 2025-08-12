@@ -133,6 +133,7 @@ jobs:
                 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
                 HOME="/root" \
                 TERM="${TERM}" \
+                AGENT_CLS="CodeActAgent" \
                 /app/.venv/bin/python /app/openhands/resolver/resolve_issue.py \
                 --selected-repo ${{ github.repository }} \
                 --issue-number ${ISSUE_NUMBER} \
