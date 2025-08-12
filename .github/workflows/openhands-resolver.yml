@@ -54,6 +54,10 @@ jobs:
               git config --global user.name 'openhands-bot'
               git config --global user.email 'openhands-bot@users.noreply.github.com'
               export TERM=xterm
+              # Ensure git config works inside runtime
+              unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM || true
+              git config --global core.pager "" || true
+              git config --global --add safe.directory /workspace || true
               /app/.venv/bin/playwright install chromium || true
               /app/.venv/bin/playwright install-deps chromium || true
               /app/.venv/bin/python -m openhands.resolver.resolve_issue \
