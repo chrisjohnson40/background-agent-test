@@ -74,12 +74,13 @@ jobs:
               git config --global core.pager "" || true
               git config --global --add safe.directory /workspace || true
               git config --global --add safe.directory /workspace/openhands-output/repo || true
-              # Fix permissions for OpenHands runtime user (UID 42420) to avoid index.lock permission denied
+              # Fix permissions for OpenHands runtime user to avoid index.lock permission denied
               echo "[resolver] fixing workspace ownership for openhands user..."
               chown -R 42420:42420 /workspace || true
-              # Ensure the OpenHands runtime user (UID 42420) can write to the mounted workspace
-              echo "[resolver] fixing workspace ownership for openhands user..."
-              chown -R 42420:42420 /workspace || true
+              chmod -R 775 /workspace || true
+              # Create openhands output directory with proper permissions
+              mkdir -p /workspace/openhands-output || true
+              chown -R 42420:42420 /workspace/openhands-output || true
               echo "[resolver] ensuring playwright browsers..."
               /app/.venv/bin/playwright install chromium || true
               /app/.venv/bin/playwright install-deps chromium || true
@@ -98,7 +99,7 @@ jobs:
               echo "Actor=${{ github.actor }}"
               echo "Issue=${ISSUE_NUMBER}"
               echo "Model=${LLM_MODEL}"
-              echo "Runtime=docker"
+              echo "Runtime=local"
               echo "::endgroup::"
 
               # Verify issue exists via API before launching
@@ -136,24 +137,14 @@ jobs:
                 --token ${{ secrets.GITHUB_TOKEN }} \
                 --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-4o' }} \
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
-                 --output-dir /workspace/openhands-output \
-                 --runtime docker \
+                                 --output-dir /workspace/openhands-output \
+                --runtime local \
                 ${INSTRUCTIONS_ARGS}
               RES_RC=$?
               echo "[resolver] resolver exit code: ${RES_RC}"
               echo "[resolver] listing /workspace/openhands-output:"
               ls -la /workspace/openhands-output || true
-              echo "[resolver] docker ps (to inspect runtime containers):"
-              docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}' | sed -n '1,50p' || true
-              RUNTIME_CONT=$(docker ps -a --filter 'name=openhands-runtime-' --format '{{.ID}}' | head -n 1)
-              if [ -n "${RUNTIME_CONT}" ]; then
-                echo "[resolver] showing logs for runtime container ${RUNTIME_CONT} (last 400 lines):"
-                docker logs --tail 400 "${RUNTIME_CONT}" || true
-                echo "[resolver] inspect runtime container:"
-                docker inspect "${RUNTIME_CONT}" | sed -n '1,200p' || true
-              else
-                echo "[resolver] no runtime container found via name filter."
-              fi
+              # With local runtime, no need to inspect Docker containers
               if [ -f /workspace/openhands-output/output.jsonl ]; then
                 echo "[resolver] tail output.jsonl:"
                 tail -n 200 /workspace/openhands-output/output.jsonl || true
