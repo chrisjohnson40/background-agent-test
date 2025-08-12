@@ -59,6 +59,12 @@ jobs:
               git config --global user.email "openhands-bot@users.noreply.github.com"
               export TERM=xterm
               # Ensure git config works inside runtime
+              # Replace system git with a wrapper to sanitize env for ALL git calls
+              if [ -x /usr/bin/git ] && [ ! -x /usr/bin/git.real ]; then mv /usr/bin/git /usr/bin/git.real; fi
+              printf '%s\n' '#!/bin/sh' \
+                'unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM GIT_CONFIG_COUNT' \
+                'exec /usr/bin/git.real "$@"' > /usr/bin/git
+              chmod +x /usr/bin/git
               unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM || true
               git config --global core.pager "" || true
               git config --global --add safe.directory /workspace || true
