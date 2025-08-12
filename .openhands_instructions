@@ -1,6 +1,7 @@
-You are fixing issues in a monorepo with Angular frontend and .NET backend following Onion Architecture.
+# You are fixing issues in a monorepo with Angular frontend and .NET backend following Onion Architecture.
 
 Key rules:
+
 - Do not modify unrelated files. Keep edits minimal and high quality.
 - Prefer focused PRs with clear descriptions and tests.
 - Backend (.NET): EF Core + MediatR + repositories + unit of work; write unit + integration tests.
@@ -10,10 +11,12 @@ Key rules:
 - Docker: multi-stage builds, health checks.
 
 When adding API endpoints:
+
 - Start with Domain/Application (DTOs, handlers), then Infrastructure (repos/EF queries), then API controllers.
 - Add tests under `src/GarageInventory.Tests`.
 - Return consistent error responses.
 
 When done:
+
 - Run unit/integration tests and ensure build succeeds.
 - Provide a concise PR description summarizing changes and tests.

@@ -112,7 +112,7 @@ jobs:
               # Build optional instructions flag if repository provides one at root
               INSTRUCTIONS_ARGS=""
               if [ -f /workspace/.openhands_instructions ]; then
-                INSTRUCTIONS_ARGS="--instructions-file /workspace/.openhands_instructions"
+                INSTRUCTIONS_ARGS="--repo-instruction-file /workspace/.openhands_instructions"
                 echo "[resolver] using custom instructions file at /workspace/.openhands_instructions"
               fi
               env -i \
