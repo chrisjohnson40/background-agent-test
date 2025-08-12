@@ -54,6 +54,8 @@ jobs:
               git config --global user.name 'openhands-bot'
               git config --global user.email 'openhands-bot@users.noreply.github.com'
               export TERM=xterm
+              /app/.venv/bin/playwright install chromium || true
+              /app/.venv/bin/playwright install-deps chromium || true
               /app/.venv/bin/python -m openhands.resolver.resolve_issue \
                 --selected-repo ${{ github.repository }} \
                 --issue-number ${{ github.event.issue.number }} \
