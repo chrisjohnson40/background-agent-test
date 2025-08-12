@@ -43,7 +43,7 @@ jobs:
             -e GITHUB_REPOSITORY="${{ github.repository }}" \
             -e GITHUB_OWNER="${{ github.repository_owner }}" \
             -e GITHUB_API_URL="https://api.github.com" \
-            -e LLM_MODEL="${{ vars.LLM_MODEL || 'openai/gpt-5-2025-08-07' }}" \
+            -e LLM_MODEL="${{ vars.LLM_MODEL || 'openai/gpt-4o' }}" \
             -e SANDBOX_VOLUMES="${{ github.workspace }}:/workspace:rw" \
             -e LLM_NUM_RETRIES="${LLM_NUM_RETRIES}" \
             -e LLM_RETRY_MIN_WAIT="${LLM_RETRY_MIN_WAIT}" \
@@ -73,6 +73,13 @@ jobs:
               unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM || true
               git config --global core.pager "" || true
               git config --global --add safe.directory /workspace || true
+              git config --global --add safe.directory /workspace/openhands-output/repo || true
+              # Fix permissions for OpenHands runtime user (UID 42420) to avoid index.lock permission denied
+              echo "[resolver] fixing workspace ownership for openhands user..."
+              chown -R 42420:42420 /workspace || true
+              # Ensure the OpenHands runtime user (UID 42420) can write to the mounted workspace
+              echo "[resolver] fixing workspace ownership for openhands user..."
+              chown -R 42420:42420 /workspace || true
               echo "[resolver] ensuring playwright browsers..."
               /app/.venv/bin/playwright install chromium || true
               /app/.venv/bin/playwright install-deps chromium || true
@@ -91,7 +98,7 @@ jobs:
               echo "Actor=${{ github.actor }}"
               echo "Issue=${ISSUE_NUMBER}"
               echo "Model=${LLM_MODEL}"
-              echo "Runtime=local"
+              echo "Runtime=docker"
               echo "::endgroup::"
 
               # Verify issue exists via API before launching
@@ -102,6 +109,12 @@ jobs:
               set -e
               if [ $CURL_RC -ne 0 ]; then echo "ERROR: Issue ${ISSUE_NUMBER} not found via API for ${GITHUB_REPOSITORY}"; exit 1; fi
               echo "[resolver] issue exists via API. launching resolver..."
+              # Build optional instructions flag if repository provides one at root
+              INSTRUCTIONS_ARGS=""
+              if [ -f /workspace/.openhands_instructions ]; then
+                INSTRUCTIONS_ARGS="--instructions-file /workspace/.openhands_instructions"
+                echo "[resolver] using custom instructions file at /workspace/.openhands_instructions"
+              fi
               env -i \
                 OPENAI_API_KEY="${OPENAI_API_KEY}" \
                 GITHUB_TOKEN="${GITHUB_TOKEN}" \
@@ -121,10 +134,11 @@ jobs:
                 --issue-number ${ISSUE_NUMBER} \
                 --username ${{ github.actor }} \
                 --token ${{ secrets.GITHUB_TOKEN }} \
-                --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-5-2025-08-07' }} \
+                --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-4o' }} \
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 8 }} \
-                --output-dir /workspace/openhands-output \
-                --runtime local
+                 --output-dir /workspace/openhands-output \
+                 --runtime docker \
+                ${INSTRUCTIONS_ARGS}
               RES_RC=$?
               echo "[resolver] resolver exit code: ${RES_RC}"
               echo "[resolver] listing /workspace/openhands-output:"
