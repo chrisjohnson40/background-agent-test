@@ -33,7 +33,7 @@ jobs:
           LLM_RETRY_MAX_WAIT: "30"
           LLM_RETRY_MULTIPLIER: "2"
         run: |
-          docker run --rm --privileged \
+          docker run --rm --privileged --network host \
             -v ${{ github.workspace }}:/workspace \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -w /workspace \
@@ -143,6 +143,17 @@ jobs:
               echo "[resolver] resolver exit code: ${RES_RC}"
               echo "[resolver] listing /workspace/openhands-output:"
               ls -la /workspace/openhands-output || true
+              echo "[resolver] docker ps (to inspect runtime containers):"
+              docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}' | sed -n '1,50p' || true
+              RUNTIME_CONT=$(docker ps -a --filter 'name=openhands-runtime-' --format '{{.ID}}' | head -n 1)
+              if [ -n "${RUNTIME_CONT}" ]; then
+                echo "[resolver] showing logs for runtime container ${RUNTIME_CONT} (last 400 lines):"
+                docker logs --tail 400 "${RUNTIME_CONT}" || true
+                echo "[resolver] inspect runtime container:"
+                docker inspect "${RUNTIME_CONT}" | sed -n '1,200p' || true
+              else
+                echo "[resolver] no runtime container found via name filter."
+              fi
               if [ -f /workspace/openhands-output/output.jsonl ]; then
                 echo "[resolver] tail output.jsonl:"
                 tail -n 200 /workspace/openhands-output/output.jsonl || true
