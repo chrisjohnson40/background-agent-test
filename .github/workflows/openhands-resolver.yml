@@ -64,7 +64,19 @@ jobs:
               git config --global --add safe.directory /workspace || true
               /app/.venv/bin/playwright install chromium || true
               /app/.venv/bin/playwright install-deps chromium || true
-              /app/.venv/bin/python -m openhands.resolver.resolve_issue \
+              env -i \
+                OPENAI_API_KEY="${OPENAI_API_KEY}" \
+                GITHUB_TOKEN="${GITHUB_TOKEN}" \
+                GH_TOKEN="${GH_TOKEN}" \
+                GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+                GITHUB_OWNER="${GITHUB_OWNER}" \
+                GITHUB_API_URL="${GITHUB_API_URL}" \
+                LLM_MODEL="${LLM_MODEL}" \
+                SANDBOX_VOLUMES="${SANDBOX_VOLUMES}" \
+                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+                HOME="/root" \
+                TERM="${TERM}" \
+                /app/.venv/bin/python -m openhands.resolver.resolve_issue \
                 --selected-repo ${{ github.repository }} \
                 --issue-number ${{ github.event.issue.number }} \
                 --username ${{ github.actor }} \
