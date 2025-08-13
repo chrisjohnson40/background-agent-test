@@ -128,8 +128,11 @@ jobs:
                 INSTRUCTIONS_ARGS="--repo-instruction-file /workspace/.openhands_instructions"
                 echo "[resolver] using custom instructions file at /workspace/.openhands_instructions"
               fi
-              # Configure git for pushing
+              # Configure git for pushing - ensure proper authentication
+              echo "[resolver] configuring git remote with token..."
               git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git || true
+              git config --global credential.helper store || true
+              echo "https://x-access-token:${GITHUB_TOKEN}@github.com" > ~/.git-credentials || true
               
               env -i \
                 OPENAI_API_KEY="${OPENAI_API_KEY}" \
@@ -190,7 +193,17 @@ jobs:
                 echo "  - Insufficient iterations to complete the task"
                 echo "  - Git/GitHub API authentication issues"
                 echo "  - The agent determining no changes were needed"
+                
+                # Check if there are any git errors in the output
+                echo "[resolver] Checking for git/GitHub errors in output:"
+                grep -i "error\|failed\|permission\|authentication" /workspace/openhands-output/output.jsonl | tail -n 10 || true
+                
+                # Test GitHub API access
+                echo "[resolver] Testing GitHub API access:"
+                curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" https://api.github.com/user | head -n 5 || true
               else
                 echo "[resolver] SUCCESS: Pull request created!"
+                # Show PR URL
+                grep '"pull_request":' /workspace/openhands-output/output.jsonl | tail -n 1 || true
               fi
             '
