@@ -106,7 +106,7 @@ This project follows **Onion Architecture** principles with clear separation of 
    
    **Optional environment variables:**
    - `PLANNER_MODEL`: Override default model for planning (default: `gpt-4o`)
-   - `LLM_MODEL`: Override default model for OpenHands (default: `anthropic/claude-4-sonnet-20250115`)
+   - `LLM_MODEL`: Override default model for OpenHands (default: `anthropic/claude-sonnet-4-20250514`)
    - `LLM_TEMPERATURE`: Override temperature for OpenHands (default: `1`)
    - `OPENHANDS_MAX_ITER`: Max iterations for OpenHands (default: `30`)
 
