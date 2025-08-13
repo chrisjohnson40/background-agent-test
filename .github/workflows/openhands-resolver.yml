@@ -190,11 +190,7 @@ jobs:
                 if ! git diff --cached --quiet; then
                   echo "[resolver] Found staged files. Committing them..."
                   git add -A
-                  git commit -m "feat: OpenHands implementation
-                  
-Automated implementation by OpenHands agent.
-                  
-Co-authored-by: OpenHands <openhands@all-hands.dev>"
+                  git commit -m "feat: OpenHands implementation - automated by OpenHands agent"
                   echo "[resolver] Committed staged files successfully"
                 else
                   echo "[resolver] No staged files found"
@@ -215,11 +211,7 @@ Co-authored-by: OpenHands <openhands@all-hands.dev>"
                   if ! git diff --cached --quiet; then
                     echo "[resolver] Found staged files in cloned repo. Committing them..."
                     git add -A
-                    git commit -m "feat: OpenHands implementation
-                    
-Automated implementation by OpenHands agent.
-                    
-Co-authored-by: OpenHands <openhands@all-hands.dev>"
+                    git commit -m "feat: OpenHands implementation - automated by OpenHands agent"
                     echo "[resolver] Committed staged files in cloned repo successfully"
                   fi
                   
