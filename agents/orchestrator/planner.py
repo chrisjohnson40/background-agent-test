@@ -32,7 +32,7 @@ Break the following SPEC into atomic GitHub issues in this EXACT order:
 Each issue must include:
 - clear title indicating order (e.g., "Step 1: Write Tests for...")
 - actionable body with acceptance criteria and tests (dotnet, Angular)
-- labels (array of strings: one of api, ui, infra, docs, test) and priority (p1/p2/p3)
+- labels (array of strings): ONLY use these exact labels: api, ui, infra, docs, test, accessibility, p1, p2, p3
 - dependencies (array of integers): step numbers this depends on (e.g., [1, 2])
 - ai_ready (boolean): true only if safe for automated coding agent
 
@@ -72,18 +72,26 @@ def create_issue(task: Task):
     ]
     if labels: cmd += ["--label", ",".join(labels)]
     
-    # Create issue and capture the issue number
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-    issue_url = result.stdout.strip()
-    issue_number = issue_url.split('/')[-1]
-    
-    # If AI-ready, add fix-me label separately to trigger the labeled event
-    if task.ai_ready:
-        subprocess.check_call([
-            "gh", "issue", "edit", issue_number,
-            "--add-label", "fix-me"
-        ])
-        print(f"Added fix-me label to issue #{issue_number} to trigger OpenHands")
+    try:
+        # Create issue and capture the issue number
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        issue_url = result.stdout.strip()
+        issue_number = issue_url.split('/')[-1]
+        
+        # If AI-ready, add fix-me label separately to trigger the labeled event
+        if task.ai_ready:
+            subprocess.check_call([
+                "gh", "issue", "edit", issue_number,
+                "--add-label", "fix-me"
+            ])
+            print(f"Added fix-me label to issue #{issue_number} to trigger OpenHands")
+            
+    except subprocess.CalledProcessError as e:
+        print(f"ERROR creating issue '{task.title}': {e}")
+        if e.stderr:
+            print(f"Error details: {e.stderr}")
+        print("Continuing with remaining issues...")
+        return  # Skip this issue but continue with others
 
 @app.command()
 def cli(spec_path: str = typer.Argument(..., help="Path to feature spec .md")):
@@ -93,9 +101,15 @@ def cli(spec_path: str = typer.Argument(..., help="Path to feature spec .md")):
     with open("planner_output.json","w",encoding="utf-8") as f:
         json.dump([t.model_dump() for t in tasks], f, indent=2)
     # Create issues via gh
+    created_count = 0
     for t in tasks:
-        create_issue(t)
-    print(f"Created {len(tasks)} issues from {spec_path}")
+        try:
+            create_issue(t)
+            created_count += 1
+        except Exception as e:
+            print(f"Failed to create issue '{t.title}': {e}")
+            continue
+    print(f"Created {created_count}/{len(tasks)} issues from {spec_path}")
 
 if __name__ == "__main__":
     app()

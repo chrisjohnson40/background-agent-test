@@ -27,6 +27,7 @@ jobs:
           gh label create infra --color 5319e7 || true
           gh label create docs --color 1d76db || true
           gh label create test --color d93f0b || true
+          gh label create accessibility --color 7057ff --description "Accessibility improvements" || true
           gh label create p1 --color b60205 || true
           gh label create p2 --color d93f0b || true
           gh label create p3 --color fef2c0 || true
