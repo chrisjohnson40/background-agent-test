@@ -47,16 +47,27 @@ def plan_from_spec(spec: str) -> List[Task]:
     return [Task(**t) for t in data]
 
 def create_issue(task: Task):
+    # First create the issue with basic labels (no fix-me yet)
     labels = task.labels[:]
-    if task.ai_ready and "fix-me" not in labels:
-        labels.append("fix-me")  # OpenHands trigger
     cmd = [
         "gh","issue","create",
         "--title", task.title,
         "--body", task.body,
     ]
     if labels: cmd += ["--label", ",".join(labels)]
-    subprocess.check_call(cmd)
+    
+    # Create issue and capture the issue number
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    issue_url = result.stdout.strip()
+    issue_number = issue_url.split('/')[-1]
+    
+    # If AI-ready, add fix-me label separately to trigger the labeled event
+    if task.ai_ready:
+        subprocess.check_call([
+            "gh", "issue", "edit", issue_number,
+            "--add-label", "fix-me"
+        ])
+        print(f"Added fix-me label to issue #{issue_number} to trigger OpenHands")
 
 @app.command()
 def cli(spec_path: str = typer.Argument(..., help="Path to feature spec .md")):
