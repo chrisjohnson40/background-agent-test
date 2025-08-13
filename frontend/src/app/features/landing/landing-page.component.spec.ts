@@ -80,33 +80,56 @@ describe('LandingPageComponent', () => {
     });
   });
 
-  describe('Call-to-Action Buttons', () => {
-    it('should display call-to-action buttons', () => {
-      const ctaButtons = compiled.querySelectorAll('button, .btn, .cta-button');
-      expect(ctaButtons.length).toBeGreaterThan(0);
+  describe('Button Presence and Accessibility', () => {
+    it('should display "Get Started" button', () => {
+      const getStartedButton = compiled.querySelector('button[data-testid="get-started"]');
+      expect(getStartedButton).toBeTruthy();
+      expect(getStartedButton?.textContent?.trim()).toBe('Get Started');
     });
 
-    it('should have a "Get Started" button', () => {
-      const getStartedButton = compiled.querySelector('button[data-testid="get-started"], .get-started-btn');
-      const buttonText = compiled.textContent?.toLowerCase() || '';
-      expect(getStartedButton || buttonText.includes('get started')).toBeTruthy();
+    it('should display "Sign Up" button', () => {
+      const signUpButton = compiled.querySelector('button[data-testid="sign-up"]');
+      expect(signUpButton).toBeTruthy();
+      expect(signUpButton?.textContent?.trim()).toBe('Sign Up');
     });
 
-    it('should have a "Learn More" button', () => {
-      const learnMoreButton = compiled.querySelector('button[data-testid="learn-more"], .learn-more-btn');
-      const buttonText = compiled.textContent?.toLowerCase() || '';
-      expect(learnMoreButton || buttonText.includes('learn more')).toBeTruthy();
+    it('should have "Get Started" button with appropriate ARIA label', () => {
+      const getStartedButton = compiled.querySelector('button[data-testid="get-started"]');
+      expect(getStartedButton).toBeTruthy();
+      expect(getStartedButton?.getAttribute('aria-label')).toBe('Get started with garage inventory management');
     });
 
-    it('should have primary and secondary action buttons', () => {
-      const buttons = compiled.querySelectorAll('button, .btn');
-      expect(buttons.length).toBeGreaterThanOrEqual(2);
+    it('should have "Sign Up" button with appropriate ARIA label', () => {
+      const signUpButton = compiled.querySelector('button[data-testid="sign-up"]');
+      expect(signUpButton).toBeTruthy();
+      expect(signUpButton?.getAttribute('aria-label')).toBe('Sign up for a new account');
+    });
+
+    it('should have both buttons present on the page', () => {
+      const getStartedButton = compiled.querySelector('button[data-testid="get-started"]');
+      const signUpButton = compiled.querySelector('button[data-testid="sign-up"]');
+      
+      expect(getStartedButton).toBeTruthy();
+      expect(signUpButton).toBeTruthy();
     });
 
     it('should have buttons with proper accessibility attributes', () => {
-      const buttons = compiled.querySelectorAll('button');
+      const buttons = compiled.querySelectorAll('button[data-testid="get-started"], button[data-testid="sign-up"]');
+      expect(buttons.length).toBe(2);
+      
       buttons.forEach(button => {
         expect(button.getAttribute('type')).toBeTruthy();
+        expect(button.getAttribute('aria-label')).toBeTruthy();
+        expect(button.getAttribute('data-testid')).toBeTruthy();
+      });
+    });
+
+    it('should have buttons that are keyboard accessible', () => {
+      const buttons = compiled.querySelectorAll('button[data-testid="get-started"], button[data-testid="sign-up"]');
+      
+      buttons.forEach(button => {
+        expect(button.tagName.toLowerCase()).toBe('button');
+        expect(button.getAttribute('tabindex')).not.toBe('-1');
       });
     });
   });
