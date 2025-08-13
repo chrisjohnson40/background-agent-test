@@ -242,7 +242,7 @@ jobs:
                 fi
                 
                 # Check for any commits that haven't been pushed
-                CURRENT_BRANCH=$(git branch --show-current)
+                CURRENT_BRANCH=`git branch --show-current`
                 echo "[resolver] Current branch: ${CURRENT_BRANCH}"
                 
                 # Check if there are commits not on origin/main
