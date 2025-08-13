@@ -13,6 +13,7 @@ class Task(BaseModel):
     body: str
     labels: List[str] = Field(default_factory=list)
     assignees: List[str] = Field(default_factory=list)
+    dependencies: List[str] = Field(default_factory=list)  # Issue numbers this depends on
     ai_ready: bool = True  # if true => label 'fix-me' to trigger OpenHands
 
 class PlanState(BaseModel):
@@ -20,12 +21,27 @@ class PlanState(BaseModel):
     tasks: List[Task] = Field(default_factory=list)
 
 PLANNER_SYS = """You are the Planner for a Garage Inventory system (Angular + .NET, Onion Arch).
-Break the following SPEC into atomic GitHub issues. Each issue must include:
-- clear title
+
+CRITICAL: Follow Test-Driven Development (TDD) - tests must be created FIRST, then implementation.
+
+Break the following SPEC into atomic GitHub issues in this EXACT order:
+1. TEST issues first (write failing tests)
+2. IMPLEMENTATION issues second (make tests pass)  
+3. REFINEMENT issues last (styling, accessibility, etc.)
+
+Each issue must include:
+- clear title indicating order (e.g., "Step 1: Write Tests for...")
 - actionable body with acceptance criteria and tests (dotnet, Angular)
 - labels (one of: api, ui, infra, docs, test) and priority (p1/p2/p3)
+- dependencies field listing issue numbers this depends on
 - mark ai_ready=True only if the task is safe for an automated coding agent (no secret rotation, no prod data ops).
-Output strictly as JSON list of tasks with fields: title, body, labels, assignees, ai_ready.
+
+For TDD compliance:
+- Test files (.spec.ts, .Tests.cs) must be created before implementation files
+- Each implementation issue should reference its corresponding test issue
+- Use "blocked by" relationships to ensure proper order
+
+Output strictly as JSON list of tasks with fields: title, body, labels, assignees, ai_ready, dependencies.
 """
 
 def make_llm():

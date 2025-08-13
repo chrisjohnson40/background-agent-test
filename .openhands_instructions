@@ -153,9 +153,12 @@ public class ResourceController : ControllerBase
 
 ### TDD Workflow - MANDATORY for new features
 
-1. **RED**: Write a failing test first
-2. **GREEN**: Write minimal code to make the test pass
+1. **RED**: Write a failing test first - CHECK OTHER ISSUES to see if tests exist
+2. **GREEN**: Write minimal code to make the test pass  
 3. **REFACTOR**: Improve the code while keeping tests green
+
+CRITICAL: Before implementing ANY feature, check if test issues exist and are completed.
+If test issues are still open, COMMENT on this issue that you're waiting for tests to be completed first.
 
 ### Implementation Order
 
