@@ -86,7 +86,8 @@ jobs:
               # Fix permissions for OpenHands runtime user UID 42420 to avoid index.lock permission denied
               echo "[resolver] fixing workspace ownership for openhands user..."
               chown -R 42420:42420 /workspace || true
-              chmod -R 775 /workspace || true
+              # Only change directory permissions, not file permissions
+              find /workspace -type d -exec chmod 755 {} \; 2>/dev/null || true
               # Create output directory with proper permissions
               mkdir -p /workspace/openhands-output || true
               chown -R 42420:42420 /workspace/openhands-output || true
@@ -211,6 +212,23 @@ jobs:
               if ! grep -q "\"pull_request\":" /workspace/openhands-output/output.jsonl 2>/dev/null; then
                 echo "[resolver] No PR detected in output. Checking if we need to create one..."
                 
+                # Reset file permissions to avoid including permission changes in PR
+                echo "[resolver] Resetting file permissions to avoid unnecessary changes..."
+                find /workspace -type f -name "*.py" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.md" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.yml" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.yaml" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.json" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.txt" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.cs" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.csproj" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.ts" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.js" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.html" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.scss" -exec chmod 644 {} \; 2>/dev/null || true
+                find /workspace -type f -name "*.css" -exec chmod 644 {} \; 2>/dev/null || true
+                git diff --stat || true
+                
                 # First check the main workspace where agent actually worked
                 cd /workspace
                 MAIN_HAS_COMMITS=false
@@ -279,9 +297,6 @@ jobs:
                     echo "[resolver] No unpushed commits found."
                     git status || true
                   fi
-                else
-                  echo "[resolver] No commits to push"
-                fi
               else
                 echo "[resolver] SUCCESS: Pull request created!"
                 # Show PR URL
