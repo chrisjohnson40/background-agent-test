@@ -29,8 +29,21 @@ Break the following SPEC into atomic GitHub issues in this EXACT order:
 2. IMPLEMENTATION issues second (make tests pass)  
 3. REFINEMENT issues last (styling, accessibility, etc.)
 
+TITLE FORMAT: Use this EXACT format for all issue titles:
+"[FEATURE-ID] Step X of Y: Description"
+
+Where:
+- FEATURE-ID: Uppercase feature identifier (e.g., LANDING-001, AUTH-002, INVENTORY-003)
+- X: Current step number (1, 2, 3, etc.)
+- Y: Total number of steps in this feature
+- Description: Clear, concise description of the task
+
+Examples:
+- "[LANDING-001] Step 1 of 7: Write Tests for LandingPageComponent Creation"
+- "[LANDING-001] Step 5 of 7: Implement LandingPageComponent"
+
 Each issue must include:
-- clear title indicating order (e.g., "Step 1: Write Tests for...")
+- title following the exact format above
 - actionable body with acceptance criteria and tests (dotnet, Angular)
 - labels (array of strings): ONLY use these exact labels: api, ui, infra, docs, test, accessibility, p1, p2, p3
 - dependencies (array of integers): step numbers this depends on (e.g., [1, 2])
@@ -102,14 +115,27 @@ def cli(spec_path: str = typer.Argument(..., help="Path to feature spec .md")):
         json.dump([t.model_dump() for t in tasks], f, indent=2)
     # Create issues via gh
     created_count = 0
-    for t in tasks:
+    issue_numbers = []
+    
+    for i, t in enumerate(tasks):
         try:
+            # Temporarily disable AI-ready for all but first issue
+            original_ai_ready = t.ai_ready
+            if i > 0:  # Only first issue gets fix-me label initially
+                t.ai_ready = False
+                
             create_issue(t)
             created_count += 1
+            
+            # Restore original ai_ready for JSON output
+            t.ai_ready = original_ai_ready
+            
         except Exception as e:
             print(f"Failed to create issue '{t.title}': {e}")
             continue
+            
     print(f"Created {created_count}/{len(tasks)} issues from {spec_path}")
+    print("Only the first issue has the fix-me label. Subsequent issues will be triggered when previous ones are completed.")
 
 if __name__ == "__main__":
     app()

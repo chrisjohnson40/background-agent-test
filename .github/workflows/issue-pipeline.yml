@@ -1,0 +1,115 @@
+name: Issue Pipeline - Trigger Next Issue
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  trigger-next-issue:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Find and trigger next issue
+        run: |
+          set -e  # Exit on any error
+          
+          # Extract issue number from PR title (assumes format "Fix: Issue #123")
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "🔍 PR Title: $PR_TITLE"
+          
+          # Extract issue number using regex
+          if [[ $PR_TITLE =~ Issue\ \#([0-9]+) ]]; then
+            COMPLETED_ISSUE=${BASH_REMATCH[1]}
+            echo "✅ Completed issue: #$COMPLETED_ISSUE"
+            
+            # Verify the completed issue exists and get its title
+            if ! ISSUE_TITLE=$(gh issue view $COMPLETED_ISSUE --json title -q '.title' 2>/dev/null); then
+              echo "❌ Error: Could not find issue #$COMPLETED_ISSUE"
+              exit 1
+            fi
+            
+            echo "📋 Completed issue title: $ISSUE_TITLE"
+            
+            # Extract feature ID and step info (format: "[FEATURE-ID] Step X of Y: ...")
+            if [[ $ISSUE_TITLE =~ \[([A-Z-]+[0-9]*)\]\ Step\ ([0-9]+)\ of\ ([0-9]+): ]]; then
+              FEATURE_ID=${BASH_REMATCH[1]}
+              COMPLETED_STEP=${BASH_REMATCH[2]}
+              TOTAL_STEPS=${BASH_REMATCH[3]}
+              NEXT_STEP=$((COMPLETED_STEP + 1))
+              echo "📊 Feature: $FEATURE_ID, Completed step: $COMPLETED_STEP/$TOTAL_STEPS, Looking for next step: $NEXT_STEP"
+              
+              # Check if we've completed all steps
+              if [ $NEXT_STEP -gt $TOTAL_STEPS ]; then
+                echo "🎉 Feature $FEATURE_ID complete! All $TOTAL_STEPS steps finished."
+                exit 0
+              fi
+              
+              # Find the next issue with same feature ID and next step number
+              SEARCH_QUERY="[$FEATURE_ID] Step $NEXT_STEP of $TOTAL_STEPS:"
+              echo "🔍 Searching for: $SEARCH_QUERY"
+              SEARCH_RESULT=$(gh issue list --state open --search "$SEARCH_QUERY" --json number,title 2>/dev/null || echo "[]")
+              NEXT_ISSUE=$(echo "$SEARCH_RESULT" | jq -r '.[0].number // empty')
+              
+              if [ ! -z "$NEXT_ISSUE" ] && [ "$NEXT_ISSUE" != "null" ]; then
+                NEXT_ISSUE_TITLE=$(echo "$SEARCH_RESULT" | jq -r '.[0].title')
+                echo "🎯 Found next issue: #$NEXT_ISSUE - $NEXT_ISSUE_TITLE"
+                
+                # Check if fix-me label already exists
+                EXISTING_LABELS=$(gh issue view $NEXT_ISSUE --json labels -q '.labels[].name' | tr '\n' ' ')
+                if [[ $EXISTING_LABELS == *"fix-me"* ]]; then
+                  echo "⚠️  Issue #$NEXT_ISSUE already has fix-me label, skipping"
+                  exit 0
+                fi
+                
+                # Add fix-me label to trigger OpenHands (with error handling)
+                if gh issue edit $NEXT_ISSUE --add-label "fix-me"; then
+                  echo "🏷️  Successfully added fix-me label to issue #$NEXT_ISSUE"
+                else
+                  echo "❌ Error: Failed to add fix-me label to issue #$NEXT_ISSUE"
+                  exit 1
+                fi
+                
+                # Add comment explaining the pipeline (with error handling)
+                COMMENT_BODY="🚀 **Pipeline Trigger**: This issue is now ready to work on after completion of issue #$COMPLETED_ISSUE. **Feature Progress**: $FEATURE_ID - Step $COMPLETED_STEP of $TOTAL_STEPS completed ✅ **Next Step**: $NEXT_STEP of $TOTAL_STEPS. Previous step has been merged successfully. You can now proceed with this step."
+                
+                if gh issue comment $NEXT_ISSUE --body "$COMMENT_BODY"; then
+                  echo "💬 Added pipeline trigger comment to issue #$NEXT_ISSUE"
+                else
+                  echo "⚠️  Warning: Failed to add comment to issue #$NEXT_ISSUE (but label was added successfully)"
+                fi
+                
+                echo "✅ Successfully triggered issue #$NEXT_ISSUE (Step $NEXT_STEP)"
+                
+              else
+                echo "❌ No next issue found for: $SEARCH_QUERY"
+                echo "ℹ️  This could mean:"
+                echo "   - The next issue doesn't exist or was deleted"
+                echo "   - The next issue doesn't follow the exact naming convention"
+                echo "   - The next issue is already closed"
+                echo "   - There's a mismatch in feature ID or step numbering"
+              fi
+              
+            else
+              echo "⚠️  Could not extract feature info from issue title: '$ISSUE_TITLE'"
+              echo "ℹ️  Expected format: '[FEATURE-ID] Step X of Y: Description'"
+              echo "ℹ️  Examples:"
+              echo "     - '[LANDING-001] Step 1 of 7: Write Tests'"
+              echo "     - '[AUTH-002] Step 3 of 5: Implement Login'"
+              echo "ℹ️  This PR may not be part of a sequential pipeline"
+            fi
+            
+          else
+            echo "ℹ️  PR title doesn't match expected format 'Fix: Issue #123'"
+            echo "ℹ️  Expected format: 'Fix: Issue #123' (created by OpenHands)"
+            echo "ℹ️  This PR may not be part of an automated pipeline"
+          fi
+          
+          echo "🔄 Pipeline check completed"

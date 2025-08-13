@@ -10,6 +10,14 @@ After making ANY changes to files, you MUST commit them:
 
 **WITHOUT COMMITTING, YOUR WORK WILL BE LOST!**
 
+## ISSUE PIPELINE SYSTEM
+
+This project uses a sequential issue pipeline:
+- Only ONE issue has the `fix-me` label at a time
+- When your PR is merged, the NEXT issue automatically gets the `fix-me` label
+- This ensures proper TDD workflow and prevents conflicts between agents
+- Focus ONLY on your assigned issue - don't worry about future steps
+
 ## PROJECT ARCHITECTURE
 
 ### Backend (.NET) - Onion Architecture
@@ -159,6 +167,12 @@ public class ResourceController : ControllerBase
 
 CRITICAL: Before implementing ANY feature, check if test issues exist and are completed.
 If test issues are still open, COMMENT on this issue that you're waiting for tests to be completed first.
+
+DEPENDENCY CHECK REQUIRED:
+1. Look at your issue title - if it says "Step X:", check if Steps 1 through X-1 are completed
+2. Search for related issues with lower step numbers
+3. If prerequisite steps are still open, STOP and comment: "Waiting for Step [X] to complete before proceeding"
+4. Only work on issues where all dependencies are satisfied
 
 ### Implementation Order
 
