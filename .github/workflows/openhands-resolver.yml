@@ -158,9 +158,6 @@ jobs:
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 30 }} \
                 --output-dir /workspace/openhands-output \
                 --runtime local \
-                --github-username ${{ github.actor }} \
-                --github-base-url https://api.github.com \
-                --pr-type draft \
                 ${INSTRUCTIONS_ARGS}
               RES_RC=$?
               echo "[resolver] resolver exit code: ${RES_RC}"
