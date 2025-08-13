@@ -53,13 +53,13 @@ jobs:
               fi
               
               # Find the next issue with same feature ID and next step number
-              SEARCH_QUERY="[$FEATURE_ID] Step $NEXT_STEP of $TOTAL_STEPS:"
-              echo "🔍 Searching for: $SEARCH_QUERY"
-              SEARCH_RESULT=$(gh issue list --state open --search "$SEARCH_QUERY" --json number,title 2>/dev/null || echo "[]")
-              NEXT_ISSUE=$(echo "$SEARCH_RESULT" | jq -r '.[0].number // empty')
+              # Use exact title matching instead of GitHub search for precision
+              echo "🔍 Looking for exact match: [$FEATURE_ID] Step $NEXT_STEP of $TOTAL_STEPS:"
+              ALL_ISSUES=$(gh issue list --state open --json number,title)
+              NEXT_ISSUE=$(echo "$ALL_ISSUES" | jq -r --arg pattern "[$FEATURE_ID] Step $NEXT_STEP of $TOTAL_STEPS:" '.[] | select(.title | startswith($pattern)) | .number' | head -n 1)
               
               if [ ! -z "$NEXT_ISSUE" ] && [ "$NEXT_ISSUE" != "null" ]; then
-                NEXT_ISSUE_TITLE=$(echo "$SEARCH_RESULT" | jq -r '.[0].title')
+                NEXT_ISSUE_TITLE=$(echo "$ALL_ISSUES" | jq -r --arg num "$NEXT_ISSUE" '.[] | select(.number == ($num | tonumber)) | .title')
                 echo "🎯 Found next issue: #$NEXT_ISSUE - $NEXT_ISSUE_TITLE"
                 
                 # Check if fix-me label already exists
