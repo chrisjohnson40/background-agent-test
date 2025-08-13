@@ -99,8 +99,14 @@ This project follows **Onion Architecture** principles with clear separation of 
 ### Quick Start with AI Workflow
 
 1. **Set up API keys** (add to repository secrets)
-   - `OPENAI_API_KEY`: Your OpenAI API key
-   - `PAT_TOKEN`: GitHub Personal Access Token with repo and workflow permissions
+   - `OPENAI_API_KEY`: Your OpenAI API key (required for LangGraph planning and OpenHands)
+   - `PAT_TOKEN`: GitHub Personal Access Token with `repo` and `workflow` scopes (required for PR creation)
+   - `ANTHROPIC_API_KEY`: Optional, if you prefer Claude over GPT-4o
+   
+   **Optional environment variables:**
+   - `PLANNER_MODEL`: Override default model for planning (default: `gpt-4o`)
+   - `LLM_TEMPERATURE`: Override temperature for OpenHands (default: `1`)
+   - `OPENHANDS_MAX_ITER`: Max iterations for OpenHands (default: `30`)
 
 2. **Create a feature specification**
    ```bash
@@ -361,6 +367,38 @@ docker-compose -f docker-compose.prod.yml up -d
 The API is documented using OpenAPI/Swagger. Once the application is running, visit:
 - Development: http://localhost:5000/swagger
 - Production: https://your-domain.com/swagger
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**OpenHands workflow fails with "Resource not accessible by integration"**
+- Solution: Use `PAT_TOKEN` instead of `GITHUB_TOKEN` in repository secrets
+- The PAT needs `repo` and `workflow` scopes
+
+**Planning workflow fails with OpenAI API errors**
+- Check that `OPENAI_API_KEY` is set in repository secrets
+- Verify you have sufficient API credits
+- Try setting `PLANNER_MODEL` to `gpt-4o-mini` for lower costs
+
+**OpenHands gets stuck in loops or runs out of iterations**
+- The agent may be overcomplicating the task
+- Try breaking down complex issues into smaller, more specific tasks
+- Check the `.openhands_instructions` file for guidance
+
+**Validation workflow creates infinite loops**
+- The workflow now prevents auto-labeling OpenHands-created PRs
+- If issues persist, manually remove the `fix-me` label from problematic PRs
+
+**Build failures in validation workflow**
+- Currently tests are disabled during setup phase
+- Focus on getting basic structure working first
+
+### Getting Help
+
+1. Check the **Actions** tab for detailed workflow logs
+2. Review the OpenHands output in `openhands-output/output.jsonl`
+3. Ensure all required secrets are properly configured
 
 ## 🤝 Contributing
 
