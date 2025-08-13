@@ -32,7 +32,7 @@ Break the following SPEC into atomic GitHub issues in this EXACT order:
 Each issue must include:
 - clear title indicating order (e.g., "Step 1: Write Tests for...")
 - actionable body with acceptance criteria and tests (dotnet, Angular)
-- labels (array of strings: one of api, ui, infra, docs, test) and priority (p1/p2/p3)
+- labels (array of strings): ONLY use these exact labels: api, ui, infra, docs, test, accessibility, p1, p2, p3
 - dependencies (array of integers): step numbers this depends on (e.g., [1, 2])
 - ai_ready (boolean): true only if safe for automated coding agent
 
