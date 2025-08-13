@@ -242,20 +242,17 @@ jobs:
                 fi
                 
                 # Check for any commits that have not been pushed
-                CURRENT_BRANCH=`git branch --show-current`
-                echo "[resolver] Current branch: ${CURRENT_BRANCH}"
+                echo "[resolver] Checking current branch..."
+                git branch --show-current
                 
                 # Check if there are commits not on origin/main
                 if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
                     echo "[resolver] Found unpushed commits. Creating PR..."
                     
-                    # Create a branch name if we are on main
-                    if [ "${CURRENT_BRANCH}" = "main" ]; then
-                      BRANCH_NAME="openhands-fix-issue-${ISSUE_NUMBER}"
-                      git checkout -b "${BRANCH_NAME}"
-                    else
-                      BRANCH_NAME="${CURRENT_BRANCH}"
-                    fi
+                    # Create a branch name - always create a new branch for PRs
+                    BRANCH_NAME="openhands-fix-issue-${ISSUE_NUMBER}"
+                    # Try to create the branch, if it fails we might already be on a branch
+                    git checkout -b "${BRANCH_NAME}" 2>/dev/null || true
                     
                     # Configure git for push
                     git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
