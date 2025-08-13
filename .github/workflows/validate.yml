@@ -53,7 +53,10 @@ jobs:
         id: verdict
         with:
           script: |
-            const failed = ${{ needs.backend.result != 'success' || needs.frontend.result != 'success' }};
+            const backendResult = '${{ needs.backend.result }}';
+            const frontendResult = '${{ needs.frontend.result }}';
+            const failed = backendResult !== 'success' || frontendResult !== 'success';
+            console.log(`Backend: ${backendResult}, Frontend: ${frontendResult}, Failed: ${failed}`);
             core.setOutput('failed', failed);
       - name: Label PR with fix-me on failure (but not if created by OpenHands)
         if: |
