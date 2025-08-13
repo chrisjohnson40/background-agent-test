@@ -83,7 +83,7 @@ jobs:
               git config --global core.pager "" || true
               git config --global --add safe.directory /workspace || true
               git config --global --add safe.directory /workspace/openhands-output/repo || true
-              # Fix permissions for OpenHands runtime user (UID 42420) to avoid index.lock permission denied
+              # Fix permissions for OpenHands runtime user UID 42420 to avoid index.lock permission denied
               echo "[resolver] fixing workspace ownership for openhands user..."
               chown -R 42420:42420 /workspace || true
               chmod -R 775 /workspace || true
@@ -105,7 +105,7 @@ jobs:
               if [ -z "${ISSUE_NUMBER}" ]; then echo "ERROR: No issue number found in event payload"; exit 1; fi
               echo "[resolver] issue number: ${ISSUE_NUMBER}"
 
-              # Debug info (safe: no secrets)
+              # Debug info - safe no secrets
               echo "::group::OpenHands Debug"
               echo "Repo=${GITHUB_REPOSITORY}"
               echo "Owner=${GITHUB_OWNER}"
@@ -164,7 +164,7 @@ jobs:
               echo "[resolver] resolver exit code: ${RES_RC}"
               echo "[resolver] listing /workspace/openhands-output:"
               ls -la /workspace/openhands-output || true
-              echo "[resolver] listing /workspace/openhands-output/repo (if exists):"
+              echo "[resolver] listing /workspace/openhands-output/repo if exists:"
               ls -la /workspace/openhands-output/repo 2>/dev/null || echo "repo directory not found"
               # With local runtime, no need to inspect Docker containers
               if [ -f /workspace/openhands-output/output.jsonl ]; then
@@ -178,8 +178,8 @@ jobs:
                 echo "[resolver] no output.jsonl present."
               fi
               
-              # Check BOTH locations for changes (agent might work in either)
-              echo "[resolver] checking git status in MAIN workspace (/workspace):"
+              # Check BOTH locations for changes - agent might work in either
+              echo "[resolver] checking git status in MAIN workspace /workspace:"
               cd /workspace && git status || true
               
               if [ -d /workspace/openhands-output/repo ]; then
