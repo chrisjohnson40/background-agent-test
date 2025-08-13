@@ -16,5 +16,20 @@
   p {
     font-size: 1.2rem;
     color: #666;
+    margin-bottom: 2rem;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    button {
+      min-width: 140px;
+      height: 48px;
+      font-size: 1rem;
+      font-weight: 500;
+    }
   }
 }
