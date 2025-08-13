@@ -12,7 +12,7 @@ jobs:
       contents: write
       issues: write
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # or ANTHROPIC_API_KEY with langchain-anthropic
     steps:
       - uses: actions/checkout@v4
