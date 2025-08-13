@@ -63,12 +63,20 @@ This project follows **Onion Architecture** principles with clear separation of 
 - **Redis**: Caching layer (optional)
 - **Nginx**: Reverse proxy and static file serving
 
+### AI/Automation
+- **LangGraph**: Intelligent task planning and workflow orchestration
+- **OpenHands**: Autonomous code implementation and issue resolution
+- **OpenAI GPT-4o**: Language model for planning and code generation
+- **GitHub Actions**: CI/CD and workflow automation
+
 ## 🏃‍♂️ Getting Started
 
 ### Prerequisites
 - **Node.js 22+**: For Angular development
 - **Docker & Docker Compose**: For containerized development
 - **.NET 9 SDK**: For local API development (optional with Docker)
+- **OpenAI API Key**: For AI planning and code generation
+- **GitHub CLI**: For issue creation and management
 
 ### Quick Start with Docker
 
@@ -87,6 +95,29 @@ This project follows **Onion Architecture** principles with clear separation of 
    - Frontend: http://localhost:4200
    - API: http://localhost:5000
    - API Documentation: http://localhost:5000/swagger
+
+### Quick Start with AI Workflow
+
+1. **Set up API keys** (add to repository secrets)
+   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `PAT_TOKEN`: GitHub Personal Access Token with repo and workflow permissions
+
+2. **Create a feature specification**
+   ```bash
+   # Create a new feature spec
+   cp docs/ai/feature-template.md docs/ai/my-new-feature.md
+   # Edit the file with your requirements
+   ```
+
+3. **Generate issues automatically**
+   - Go to **Actions** → **Plan feature into issues**
+   - Run workflow with path: `docs/ai/my-new-feature.md`
+   - Issues will be created automatically with `fix-me` labels
+
+4. **Watch OpenHands work**
+   - OpenHands will automatically start working on labeled issues
+   - Monitor progress in the **Actions** tab
+   - Review and merge the generated pull requests
 
 ### Local Development Setup
 
@@ -114,23 +145,105 @@ docker run --name garage-db -e POSTGRES_PASSWORD=garage_password -e POSTGRES_USE
 docker-compose up postgres
 ```
 
-## 🤖 AI-Powered Development with OpenHands
+## 🤖 AI-Powered Development Workflow
 
-This project includes automated issue resolution using OpenHands, an AI agent that can autonomously solve GitHub issues.
+This project demonstrates a complete AI-assisted development workflow using **LangGraph** for intelligent planning and **OpenHands** for autonomous code implementation.
 
-### OpenHands Integration
-The repository includes a GitHub Actions workflow that automatically triggers when issues are labeled with `fix-me`. The OpenHands agent will:
+## 📋 LangGraph Planning System
+
+The project includes an intelligent planning system built with LangGraph that can break down complex feature specifications into actionable GitHub issues.
+
+### How LangGraph Planning Works
+
+1. **Feature Specification**: Write a detailed feature spec in markdown (see `docs/ai/` for examples)
+2. **AI Analysis**: LangGraph analyzes the specification using GPT-4o
+3. **Task Breakdown**: Creates atomic, well-defined GitHub issues with:
+   - Clear titles and descriptions
+   - Acceptance criteria and test requirements
+   - Appropriate labels (`api`, `ui`, `infra`, `docs`, `test`)
+   - Priority levels (`p1`, `p2`, `p3`)
+   - AI-readiness assessment for automated resolution
+
+### Using the Planning System
+
+#### Method 1: GitHub Actions (Recommended)
+1. Create a feature specification file in `docs/ai/your-feature.md`
+2. Go to **Actions** → **Plan feature into issues**
+3. Click **Run workflow** and enter the path to your spec file
+4. The system will automatically create labeled GitHub issues
+
+#### Method 2: Local Development
+```bash
+# Install the planner
+cd agents/orchestrator
+pip install -e .
+
+# Set your OpenAI API key
+export OPENAI_API_KEY="your-api-key"
+
+# Run the planner
+plan docs/ai/your-feature.md
+```
+
+### Feature Specification Format
+
+Create markdown files in `docs/ai/` following this structure:
+
+```markdown
+# Feature Name
+
+## Description
+Clear description of what you want to build
+
+## Requirements
+- Specific requirement 1
+- Specific requirement 2
+- etc.
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Tests are included
+
+## Technical Notes
+Any architectural considerations or constraints
+```
+
+## 🚀 OpenHands Integration
+
+Once issues are created by the planner, OpenHands can automatically resolve them.
+
+### OpenHands Workflow
+Issues labeled with `fix-me` automatically trigger the OpenHands agent, which will:
 1. Analyze the issue description
 2. Implement the required solution
 3. Create tests if applicable
 4. Commit the changes
 5. Automatically create a pull request
 
-### How to Use OpenHands
-1. Create an issue with clear requirements
-2. Add the `fix-me` label
-3. OpenHands will automatically start working on it
-4. Review the generated PR once complete
+### Complete AI Development Flow
+
+```mermaid
+graph TD
+    A[Write Feature Spec] --> B[Run LangGraph Planner]
+    B --> C[Generate GitHub Issues]
+    C --> D[Issues Auto-labeled 'fix-me']
+    D --> E[OpenHands Resolves Issues]
+    E --> F[Pull Requests Created]
+    F --> G[Human Review & Merge]
+```
+
+### Labels and Automation
+
+The system uses these labels for organization and automation:
+
+- **`fix-me`**: Triggers OpenHands automatic resolution
+- **`api`**: Backend API-related tasks
+- **`ui`**: Frontend/Angular tasks  
+- **`infra`**: Infrastructure, Docker, deployment
+- **`docs`**: Documentation updates
+- **`test`**: Testing-related tasks
+- **`p1/p2/p3`**: Priority levels
 
 ### Background Agent Capabilities
 - **Autonomous Development**: Agents can work on specific features independently
@@ -200,10 +313,21 @@ background-agent-test/
 │   │   ├── layout/                       # Layout components
 │   │   ├── core/                         # Core services and guards
 │   │   └── shared/                       # Shared components
-│   ├── Dockerfile                        # Production Docker image
-│   └── Dockerfile.dev                    # Development Docker image
+├── agents/                                # AI Planning System
+│   └── orchestrator/                     # LangGraph-based planner
+│       ├── planner.py                    # Main planning logic
+│       ├── validator_summary.py          # Validation utilities
+│       └── pyproject.toml               # Python dependencies
+├── docs/ai/                              # Feature specifications
+│   ├── feature-template.md              # Template for new features
+│   └── simple-test-feature.md           # Example feature spec
+├── .github/workflows/                     # GitHub Actions
+│   ├── openhands-resolver.yml           # OpenHands automation
+│   ├── plan.yml                         # LangGraph planning workflow
+│   └── validate.yml                     # Validation workflow
 ├── database/                              # Database initialization
 ├── docker-compose.yml                     # Development environment
+├── .openhands_instructions               # OpenHands agent instructions
 ├── .cursorrules                          # AI development guidelines
 └── README.md                             # This file
 ```
