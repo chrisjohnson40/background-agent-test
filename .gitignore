@@ -1,3 +1,6 @@
+# OpenHands temporary files
+openhands-output/
+
 # .NET
 bin/
 obj/

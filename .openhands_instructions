@@ -32,22 +32,65 @@ print("Your message here")
 
 If asked to create an API endpoint:
 
-1. Look at existing controllers in src/GarageInventory.API/Controllers
+1. Create Controllers directory if it doesn't exist: src/GarageInventory.API/Controllers
 2. Create or modify a controller with your endpoint
-3. Keep it simple - basic implementation first
-4. Add DTOs if needed in src/GarageInventory.Application/DTOs
+3. Follow the existing Onion Architecture:
+   - Controllers in API layer (src/GarageInventory.API/Controllers)
+   - DTOs in Application layer (src/GarageInventory.Application/DTOs)
+   - Entities in Domain layer (src/GarageInventory.Domain/Entities)
+   - Repositories in Infrastructure layer (src/GarageInventory.Infrastructure)
+4. Add proper using statements and namespace
 5. IMPORTANT: Commit your changes (git add -A && git commit -m "feat: [description]")
 
-Example endpoint:
+Example controller:
 
 ```csharp
-[HttpGet("search")]
-public async Task<IActionResult> SearchItems([FromQuery] string searchTerm, [FromQuery] int? categoryId)
+using Microsoft.AspNetCore.Mvc;
+using GarageInventory.Application.DTOs;
+
+namespace GarageInventory.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ItemsController : ControllerBase
 {
-    // Simple implementation
-    var results = new List<object>();
-    return Ok(results);
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchItems([FromQuery] string searchTerm, [FromQuery] int? categoryId)
+    {
+        // Simple implementation
+        var results = new List<object>();
+        return Ok(results);
+    }
 }
+```
+
+## For Frontend Tasks (Angular)
+
+If asked to create Angular components or services:
+
+1. Use Angular CLI-style structure in frontend/src/app/
+2. Follow the existing folder structure:
+   - Components in feature folders (inventory/, auth/, locations/)
+   - Services in core/services/
+   - Shared components in shared/
+3. Use standalone components (Angular 14+ style)
+4. Import Angular Material components as needed
+5. IMPORTANT: Commit your changes (git add -A && git commit -m "feat: [description]")
+
+Example component:
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+
+@Component({
+  selector: 'app-example',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule],
+  template: `<button mat-raised-button>Example</button>`
+})
+export class ExampleComponent {}
 ```
 
 ## AVOID
