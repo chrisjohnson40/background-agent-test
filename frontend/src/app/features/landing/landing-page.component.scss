@@ -19,6 +19,33 @@
     margin-bottom: 2rem;
   }
 
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+    max-width: 800px;
+
+    .feature-item {
+      text-align: center;
+      padding: 1.5rem;
+      border-radius: 8px;
+      background: #f8f9fa;
+
+      h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+        color: #333;
+      }
+
+      p {
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 0;
+      }
+    }
+  }
+
   .cta-buttons {
     display: flex;
     gap: 1rem;
@@ -30,6 +57,91 @@
       height: 48px;
       font-size: 1rem;
       font-weight: 500;
+    }
+  }
+
+  // Mobile responsive styles
+  @media (max-width: 767px) {
+    padding: 1rem;
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .features {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+
+      .feature-item {
+        padding: 1rem;
+
+        h3 {
+          font-size: 1.1rem;
+        }
+
+        p {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 280px;
+
+      button {
+        width: 100%;
+        min-width: unset;
+        height: 44px;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  // Tablet responsive styles
+  @media (min-width: 768px) and (max-width: 1023px) {
+    padding: 1.5rem;
+
+    h1 {
+      font-size: 2.25rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+    }
+  }
+
+  // Large desktop styles
+  @media (min-width: 1024px) {
+    padding: 3rem;
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1.25rem;
+    }
+
+    p {
+      font-size: 1.3rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .cta-buttons {
+      gap: 1.5rem;
+
+      button {
+        min-width: 160px;
+        height: 52px;
+        font-size: 1.1rem;
+      }
     }
   }
 }
