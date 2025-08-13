@@ -13,7 +13,7 @@ class Task(BaseModel):
     body: str
     labels: List[str] = Field(default_factory=list)
     assignees: List[str] = Field(default_factory=list)
-    dependencies: List[str] = Field(default_factory=list)  # Issue numbers this depends on
+    dependencies: List[int] = Field(default_factory=list)  # Issue numbers this depends on
     ai_ready: bool = True  # if true => label 'fix-me' to trigger OpenHands
 
 class PlanState(BaseModel):
@@ -32,16 +32,16 @@ Break the following SPEC into atomic GitHub issues in this EXACT order:
 Each issue must include:
 - clear title indicating order (e.g., "Step 1: Write Tests for...")
 - actionable body with acceptance criteria and tests (dotnet, Angular)
-- labels (one of: api, ui, infra, docs, test) and priority (p1/p2/p3)
-- dependencies field listing issue numbers this depends on
-- mark ai_ready=True only if the task is safe for an automated coding agent (no secret rotation, no prod data ops).
+- labels (array of strings: one of api, ui, infra, docs, test) and priority (p1/p2/p3)
+- dependencies (array of integers): step numbers this depends on (e.g., [1, 2])
+- ai_ready (boolean): true only if safe for automated coding agent
 
 For TDD compliance:
 - Test files (.spec.ts, .Tests.cs) must be created before implementation files
-- Each implementation issue should reference its corresponding test issue
-- Use "blocked by" relationships to ensure proper order
+- Each implementation issue should reference its corresponding test issue step numbers
+- Use dependencies array to ensure proper order
 
-Output strictly as JSON list of tasks with fields: title, body, labels, assignees, ai_ready, dependencies.
+Output strictly as JSON list of tasks with fields: title (string), body (string), labels (array of strings), assignees (array of strings), ai_ready (boolean), dependencies (array of integers).
 """
 
 def make_llm():
