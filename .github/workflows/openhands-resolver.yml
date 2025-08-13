@@ -106,9 +106,13 @@ jobs:
                 echo "ANTHROPIC_API_KEY is available inside container"
               fi
               
+                            # Ensure API key is available to all subprocesses
+              export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+              export LLM_MODEL="${LLM_MODEL:-anthropic/claude-sonnet-4-20250514}"
+              
               # Add a small delay to help with rate limiting when multiple runs queue up
               sleep 10
-
+              
               # Determine issue number robustly across events
               ISSUE_NUMBER="${{ github.event.issue.number }}"
               if [ -z "${ISSUE_NUMBER}" ]; then ISSUE_NUMBER="${{ github.event.pull_request.number }}"; fi
@@ -139,6 +143,7 @@ jobs:
               
               env -i \
                 OPENAI_API_KEY="${OPENAI_API_KEY}" \
+                ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" \
                 GITHUB_TOKEN="${GITHUB_TOKEN}" \
                 GH_TOKEN="${GH_TOKEN}" \
                 GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
