@@ -267,6 +267,11 @@ jobs:
                 if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
                     echo "[resolver] Found unpushed commits. Creating PR..."
                     
+                    # Remove openhands-output from git tracking if it was accidentally added
+                    echo "[resolver] Removing openhands-output from git tracking..."
+                    git rm -r --cached openhands-output 2>/dev/null || true
+                    git reset HEAD openhands-output 2>/dev/null || true
+                    
                     # Create a branch name - always create a new branch for PRs
                     BRANCH_NAME="openhands-fix-issue-${ISSUE_NUMBER}"
                     # Try to create the branch, if it fails we might already be on a branch
