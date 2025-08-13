@@ -7,10 +7,10 @@ on:
   pull_request:
     types: [labeled]
 
-# Global concurrency to prevent OpenAI rate limiting
+# Global concurrency to prevent OpenAI rate limiting and multiple agents working simultaneously
 concurrency:
   group: openhands-global
-  cancel-in-progress: false  # Queue them instead of canceling
+  cancel-in-progress: true  # Cancel older runs when new ones start (supports sequential pipeline)
 
 jobs:
   resolve:
@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 60
     concurrency:
       group: openhands-resolver-${{ github.event.issue.number || github.event.pull_request.number }}
-      cancel-in-progress: false  # Don't cancel, just queue them
+      cancel-in-progress: true  # Cancel previous runs for the same issue
     permissions:
       contents: write
       pull-requests: write
@@ -185,6 +185,21 @@ jobs:
                 
                 # First check the main workspace where agent actually worked
                 cd /workspace
+                
+                # Check for staged files and commit them if they exist
+                if ! git diff --cached --quiet; then
+                  echo "[resolver] Found staged files. Committing them..."
+                  git add -A
+                  git commit -m "feat: OpenHands implementation
+                  
+Automated implementation by OpenHands agent.
+                  
+Co-authored-by: OpenHands <openhands@all-hands.dev>"
+                  echo "[resolver] Committed staged files successfully"
+                else
+                  echo "[resolver] No staged files found"
+                fi
+                
                 MAIN_HAS_COMMITS=false
                 if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
                   echo "[resolver] Found commits in main workspace!"
@@ -195,6 +210,19 @@ jobs:
                 CLONE_HAS_COMMITS=false
                 if [ -d /workspace/openhands-output/repo ]; then
                   cd /workspace/openhands-output/repo
+                  
+                  # Check for staged files and commit them if they exist
+                  if ! git diff --cached --quiet; then
+                    echo "[resolver] Found staged files in cloned repo. Committing them..."
+                    git add -A
+                    git commit -m "feat: OpenHands implementation
+                    
+Automated implementation by OpenHands agent.
+                    
+Co-authored-by: OpenHands <openhands@all-hands.dev>"
+                    echo "[resolver] Committed staged files in cloned repo successfully"
+                  fi
+                  
                   if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
                     echo "[resolver] Found commits in cloned repo!"
                     CLONE_HAS_COMMITS=true
