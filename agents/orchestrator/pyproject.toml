@@ -10,8 +10,8 @@ dependencies = [
 ]
 
 [project.scripts]
-plan = "planner:cli"
-validate_summary = "validator_summary:cli"
+plan = "planner:app"
+validate_summary = "validator_summary:app"
 
 [tool.setuptools]
 py-modules = ["planner", "validator_summary"]
