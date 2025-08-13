@@ -156,8 +156,11 @@ jobs:
                 --token ${{ secrets.GITHUB_TOKEN }} \
                 --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-4o' }} \
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 30 }} \
-                                 --output-dir /workspace/openhands-output \
+                --output-dir /workspace/openhands-output \
                 --runtime local \
+                --github-username ${{ github.actor }} \
+                --github-base-url https://api.github.com \
+                --pr-type draft \
                 ${INSTRUCTIONS_ARGS}
               RES_RC=$?
               echo "[resolver] resolver exit code: ${RES_RC}"
@@ -177,6 +180,12 @@ jobs:
               if [ -d /workspace/openhands-output/repo ]; then
                 echo "[resolver] checking git status in repo:"
                 cd /workspace/openhands-output/repo && git status || true
+                echo "[resolver] checking for untracked files:"
+                git status --porcelain || true
+                echo "[resolver] listing scripts directory:"
+                ls -la scripts/ 2>/dev/null || echo "No scripts directory found"
+                echo "[resolver] checking entire repo for hello_openhands.py:"
+                find . -name "hello_openhands.py" -type f 2>/dev/null || echo "File not found"
                 cd /workspace
               fi
               
