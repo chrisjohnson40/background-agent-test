@@ -1,6 +1,6 @@
 # Garage Inventory Management System
 
-A modern, full-stack inventory management system built with Angular and .NET, designed for managing garage/workshop inventory across multiple locations. This project serves as a test implementation for Cursor's background agents and demonstrates best practices for AI-assisted development.
+A modern, full-stack inventory management system built with Angular and .NET, designed for managing garage/workshop inventory across multiple locations. This project demonstrates AI-assisted development using OpenHands for automated issue resolution and best practices for human-AI collaboration.
 
 ## 🏗️ Architecture
 
@@ -114,9 +114,23 @@ docker run --name garage-db -e POSTGRES_PASSWORD=garage_password -e POSTGRES_USE
 docker-compose up postgres
 ```
 
-## 🤖 Background Agents & AI Development
+## 🤖 AI-Powered Development with OpenHands
 
-This project is specifically designed to demonstrate effective use of Cursor's background agents. Here's how to leverage them:
+This project includes automated issue resolution using OpenHands, an AI agent that can autonomously solve GitHub issues.
+
+### OpenHands Integration
+The repository includes a GitHub Actions workflow that automatically triggers when issues are labeled with `fix-me`. The OpenHands agent will:
+1. Analyze the issue description
+2. Implement the required solution
+3. Create tests if applicable
+4. Commit the changes
+5. Automatically create a pull request
+
+### How to Use OpenHands
+1. Create an issue with clear requirements
+2. Add the `fix-me` label
+3. OpenHands will automatically start working on it
+4. Review the generated PR once complete
 
 ### Background Agent Capabilities
 - **Autonomous Development**: Agents can work on specific features independently
@@ -240,6 +254,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- Built with Cursor AI and background agents
+- Integrated with OpenHands for automated issue resolution
+- Built with AI-assisted development tools
 - Demonstrates modern .NET and Angular development practices
 - Showcases effective human-AI collaboration in software development

@@ -62,42 +62,33 @@ jobs:
             ghcr.io/all-hands-ai/openhands:0.51.1 \
             -lc '
               set -e
-              set -x
               export DEBIAN_FRONTEND=noninteractive
-              echo "[resolver] installing packages..."
-              apt-get update && apt-get install -y --no-install-recommends git tmux curl
-              echo "[resolver] packages installed."
+              apt-get update && apt-get install -y --no-install-recommends git tmux curl > /dev/null 2>&1
               git config --global user.name "github-actions[bot]"
               git config --global user.email "github-actions[bot]@users.noreply.github.com"
               export TERM=xterm
               # Ensure git config works inside runtime
               # Replace system git with a wrapper to sanitize env for ALL git calls
               if [ -x /usr/bin/git ] && [ ! -x /usr/bin/git.real ]; then mv /usr/bin/git /usr/bin/git.real; fi
-              echo "[resolver] installing git wrapper..."
               echo "#!/bin/sh" > /usr/bin/git
               echo "unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM GIT_CONFIG_COUNT" >> /usr/bin/git
               echo "exec /usr/bin/git.real \"\$@\"" >> /usr/bin/git
               chmod +x /usr/bin/git
-              echo "[resolver] git wrapper installed."
               unset GIT_CONFIG GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM || true
               git config --global core.pager "" || true
               git config --global --add safe.directory /workspace || true
               git config --global --add safe.directory /workspace/openhands-output/repo || true
               # Fix permissions for OpenHands runtime user UID 42420 to avoid index.lock permission denied
-              echo "[resolver] fixing workspace ownership for openhands user..."
               chown -R 42420:42420 /workspace || true
               # Only change directory permissions, not file permissions
               find /workspace -type d -exec chmod 755 {} \; 2>/dev/null || true
               # Create output directory with proper permissions
               mkdir -p /workspace/openhands-output || true
               chown -R 42420:42420 /workspace/openhands-output || true
-              echo "[resolver] ensuring playwright browsers..."
-              /app/.venv/bin/playwright install chromium || true
-              /app/.venv/bin/playwright install-deps chromium || true
-              echo "[resolver] playwright ready."
+              /app/.venv/bin/playwright install chromium > /dev/null 2>&1 || true
+              /app/.venv/bin/playwright install-deps chromium > /dev/null 2>&1 || true
               
               # Add a small delay to help with rate limiting when multiple runs queue up
-              echo "[resolver] waiting 10 seconds to avoid rate limit bursts..."
               sleep 10
 
               # Determine issue number robustly across events
@@ -106,15 +97,7 @@ jobs:
               if [ -z "${ISSUE_NUMBER}" ]; then echo "ERROR: No issue number found in event payload"; exit 1; fi
               echo "[resolver] issue number: ${ISSUE_NUMBER}"
 
-              # Debug info - safe no secrets
-              echo "::group::OpenHands Debug"
-              echo "Repo=${GITHUB_REPOSITORY}"
-              echo "Owner=${GITHUB_OWNER}"
-              echo "Actor=${{ github.actor }}"
-              echo "Issue=${ISSUE_NUMBER}"
-              echo "Model=${LLM_MODEL}"
-              echo "Runtime=local"
-              echo "::endgroup::"
+
 
               # Verify issue exists via API before launching
               set +e
@@ -163,44 +146,6 @@ jobs:
                 ${INSTRUCTIONS_ARGS}
               RES_RC=$?
               echo "[resolver] resolver exit code: ${RES_RC}"
-              echo "[resolver] listing /workspace/openhands-output:"
-              ls -la /workspace/openhands-output || true
-              echo "[resolver] listing /workspace/openhands-output/repo if exists:"
-              ls -la /workspace/openhands-output/repo 2>/dev/null || echo "repo directory not found"
-              # With local runtime, no need to inspect Docker containers
-              if [ -f /workspace/openhands-output/output.jsonl ]; then
-                echo "[resolver] tail output.jsonl:"
-                tail -n 200 /workspace/openhands-output/output.jsonl || true
-                echo "[resolver] checking what commands the agent ran:"
-                grep -o "\"command\":\"[^\"]*\"" /workspace/openhands-output/output.jsonl | tail -n 20 || true
-                echo "[resolver] checking for git commands:"
-                grep -i "git add\|git commit\|git push" /workspace/openhands-output/output.jsonl | tail -n 10 || true
-              else
-                echo "[resolver] no output.jsonl present."
-              fi
-              
-              # Check BOTH locations for changes - agent might work in either
-              echo "[resolver] checking git status in MAIN workspace /workspace:"
-              cd /workspace && git status || true
-              
-              if [ -d /workspace/openhands-output/repo ]; then
-                echo "[resolver] checking git status in cloned repo:"
-                cd /workspace/openhands-output/repo && git status || true
-                echo "[resolver] checking for untracked files:"
-                git status --porcelain || true
-                echo "[resolver] listing ALL directories in repo:"
-                ls -la || true
-                echo "[resolver] searching for any Python files:"
-                find . -name "*.py" -type f 2>/dev/null | head -20 || echo "No Python files found"
-                echo "[resolver] checking git log for recent commits:"
-                git log --oneline -5 || echo "No commits found"
-                cd /workspace
-              fi
-              
-              # Also check the main workspace
-              echo "[resolver] checking main workspace /workspace:"
-              ls -la /workspace/scripts/ 2>/dev/null || echo "No scripts directory in main workspace"
-              find /workspace -name "hello_openhands.py" -type f 2>/dev/null | head -5 || true
               
               # Fail if resolver failed
               if [ ${RES_RC} -ne 0 ]; then 
@@ -213,21 +158,7 @@ jobs:
                 echo "[resolver] No PR detected in output. Checking if we need to create one..."
                 
                 # Reset file permissions to avoid including permission changes in PR
-                echo "[resolver] Resetting file permissions to avoid unnecessary changes..."
-                find /workspace -type f -name "*.py" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.md" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.yml" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.yaml" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.json" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.txt" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.cs" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.csproj" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.ts" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.js" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.html" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.scss" -exec chmod 644 {} \; 2>/dev/null || true
-                find /workspace -type f -name "*.css" -exec chmod 644 {} \; 2>/dev/null || true
-                git diff --stat || true
+                find /workspace -type f \( -name "*.py" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.txt" -o -name "*.cs" -o -name "*.csproj" -o -name "*.ts" -o -name "*.js" -o -name "*.html" -o -name "*.scss" -o -name "*.css" \) -exec chmod 644 {} \; 2>/dev/null || true
                 
                 # First check the main workspace where agent actually worked
                 cd /workspace
@@ -260,8 +191,7 @@ jobs:
                 fi
                 
                 # Check for any commits that have not been pushed
-                echo "[resolver] Checking current branch..."
-                git branch --show-current
+
                 
                 # Check if there are commits not on origin/main
                 if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
