@@ -133,12 +133,15 @@ This project follows **Onion Architecture** principles with clear separation of 
 3. **Generate issues automatically**
    - Go to **Actions** → **Plan feature into issues**
    - Run workflow with path: `docs/ai/my-new-feature.md`
-   - Issues will be created automatically with `fix-me` labels
+   - Issues will be created with standardized naming: `[FEATURE-ID] Step X of Y: Description`
+   - Only the first issue will get the `fix-me` label initially
 
-4. **Watch OpenHands work**
-   - OpenHands will automatically start working on labeled issues
+4. **Watch the sequential pipeline work**
+   - OpenHands will automatically start working on the first labeled issue
    - Monitor progress in the **Actions** tab
-   - Review and merge the generated pull requests
+   - Review and merge the generated pull request
+   - The pipeline will automatically trigger the next issue
+   - Repeat until all steps are complete
 
 ### Local Development Setup
 
@@ -254,23 +257,100 @@ Issues labeled with `fix-me` automatically trigger the OpenHands agent, which wi
 ```mermaid
 graph TD
     A[Write Feature Spec] --> B[Run LangGraph Planner]
-    B --> C[Generate GitHub Issues]
-    C --> D[Issues Auto-labeled 'fix-me']
-    D --> E[OpenHands Resolves Issues]
-    E --> F[Pull Requests Created]
-    F --> G[Human Review & Merge]
+    B --> C[Generate Sequenced GitHub Issues]
+    C --> D[Only First Issue Gets 'fix-me' Label]
+    D --> E[OpenHands Resolves Current Issue]
+    E --> F[Pull Request Created]
+    F --> G[Human Reviews & Merges PR]
+    G --> H[Pipeline Auto-triggers Next Issue]
+    H --> I{More Issues?}
+    I -->|Yes| E
+    I -->|No| J[Feature Complete 🎉]
+```
+
+### Sequential Issue Pipeline
+
+This project uses an intelligent **sequential pipeline system** that ensures proper Test-Driven Development (TDD) workflow and prevents conflicts between multiple AI agents.
+
+#### How the Pipeline Works
+
+1. **Planner Creates Issues**: Issues are created with standardized naming: `[FEATURE-ID] Step X of Y: Description`
+2. **Only First Issue Gets `fix-me`**: Only Step 1 receives the `fix-me` label initially
+3. **Sequential Execution**: Each issue must complete before the next one starts
+4. **Automatic Progression**: When a PR is merged, the pipeline automatically triggers the next issue
+
+#### Issue Naming Convention
+
+All issues follow this exact format:
+
+```text
+[FEATURE-ID] Step X of Y: Description
+```
+
+**Examples:**
+
+- `[LANDING-001] Step 1 of 7: Write Tests for LandingPageComponent Creation`
+- `[LANDING-001] Step 2 of 7: Write Tests for LandingPageComponent Content`
+- `[AUTH-002] Step 1 of 5: Implement User Authentication Service`
+
+**Components:**
+
+- **FEATURE-ID**: Uppercase identifier (e.g., `LANDING-001`, `AUTH-002`, `INVENTORY-003`)
+- **X**: Current step number (1, 2, 3, etc.)
+- **Y**: Total steps in this feature
+- **Description**: Clear, concise task description
+
+#### Pipeline Flow
+
+```mermaid
+graph TD
+    A[Planner Creates 7 Issues] --> B[Only Step 1 Gets fix-me Label]
+    B --> C[OpenHands Works on Step 1]
+    C --> D[Step 1 PR Created]
+    D --> E[Human Reviews & Merges PR]
+    E --> F[Pipeline Detects Merge]
+    F --> G[Step 2 Gets fix-me Label]
+    G --> H[OpenHands Works on Step 2]
+    H --> I[Continue Until All Steps Complete]
+```
+
+#### Benefits of Sequential Pipeline
+
+- ✅ **No Agent Conflicts**: Only one AI agent working at a time
+- ✅ **True TDD**: Tests always complete before implementation
+- ✅ **Clear Dependencies**: Each step builds on previous ones
+- ✅ **Automatic Progression**: No manual intervention needed
+- ✅ **Feature Isolation**: Multiple features can exist without conflicts
+
+#### Manual Pipeline Management
+
+If you need to manually control the pipeline:
+
+```bash
+# Trigger a specific issue
+gh issue edit 123 --add-label "fix-me"
+
+# Stop the pipeline (remove fix-me from active issue)
+gh issue edit 123 --remove-label "fix-me"
+
+# Skip to a specific step (add fix-me to later step)
+gh issue edit 125 --add-label "fix-me"  # Skip to Step 3
+
+# Check pipeline status
+gh issue list --label "fix-me" --state open
 ```
 
 ### Labels and Automation
 
 The system uses these labels for organization and automation:
 
-- **`fix-me`**: Triggers OpenHands automatic resolution
+- **`fix-me`**: Triggers OpenHands automatic resolution (added sequentially by pipeline)
 - **`api`**: Backend API-related tasks
 - **`ui`**: Frontend/Angular tasks  
 - **`infra`**: Infrastructure, Docker, deployment
 - **`docs`**: Documentation updates
 - **`test`**: Testing-related tasks
+- **`accessibility`**: Accessibility improvements
 - **`p1/p2/p3`**: Priority levels
 
 ### Background Agent Capabilities
@@ -357,6 +437,7 @@ background-agent-test/
 ├── .github/workflows/                     # GitHub Actions
 │   ├── openhands-resolver.yml           # OpenHands automation
 │   ├── plan.yml                         # LangGraph planning workflow
+│   ├── issue-pipeline.yml               # Sequential issue pipeline
 │   └── validate.yml                     # Validation workflow
 ├── database/                              # Database initialization
 ├── docker-compose.yml                     # Development environment
@@ -436,6 +517,26 @@ The API is documented using OpenAPI/Swagger. Once the application is running, vi
 
 - Currently tests are disabled during setup phase
 - Focus on getting basic structure working first
+
+**Pipeline not triggering next issue**
+
+- Ensure `PAT_TOKEN` is configured (not just `GITHUB_TOKEN`)
+- Check that PR titles follow format: "Fix: Issue #123"
+- Verify issue titles follow format: "[FEATURE-ID] Step X of Y: Description"
+- Check the issue-pipeline workflow logs in Actions tab
+
+**Multiple agents working simultaneously**
+
+- This shouldn't happen with the sequential pipeline
+- If it does, manually remove `fix-me` labels from all but one issue
+- Check that the pipeline workflow is enabled and running correctly
+
+**Pipeline gets stuck or skips issues**
+
+- Verify issue naming follows exact format: `[FEATURE-ID] Step X of Y: Description`
+- Check for typos in feature IDs between issues
+- Ensure step numbers are consecutive (1, 2, 3, etc.)
+- Look for closed issues that might break the sequence
 
 ### Getting Help
 
