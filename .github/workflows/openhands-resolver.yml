@@ -43,6 +43,14 @@ jobs:
           LLM_RETRY_MAX_WAIT: "30"
           LLM_RETRY_MULTIPLIER: "2"
         run: |
+          # Debug: Check if API key is available (without exposing it)
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "ERROR: ANTHROPIC_API_KEY secret is not set"
+            exit 1
+          else
+            echo "ANTHROPIC_API_KEY secret is available"
+          fi
+          
           docker run --rm --privileged --network host \
             -v ${{ github.workspace }}:/workspace \
             -v /var/run/docker.sock:/var/run/docker.sock \
@@ -89,6 +97,14 @@ jobs:
               chown -R 42420:42420 /workspace/openhands-output || true
               /app/.venv/bin/playwright install chromium > /dev/null 2>&1 || true
               /app/.venv/bin/playwright install-deps chromium > /dev/null 2>&1 || true
+              
+              # Debug: Check if API key is available inside container
+              if [ -z "$ANTHROPIC_API_KEY" ]; then
+                echo "ERROR: ANTHROPIC_API_KEY not available inside container"
+                exit 1
+              else
+                echo "ANTHROPIC_API_KEY is available inside container"
+              fi
               
               # Add a small delay to help with rate limiting when multiple runs queue up
               sleep 10
