@@ -185,6 +185,21 @@ jobs:
                 
                 # First check the main workspace where agent actually worked
                 cd /workspace
+                
+                # Check for staged files and commit them if they exist
+                if ! git diff --cached --quiet; then
+                  echo "[resolver] Found staged files. Committing them..."
+                  git add -A
+                  git commit -m "feat: OpenHands implementation
+                  
+Automated implementation by OpenHands agent.
+                  
+Co-authored-by: OpenHands <openhands@all-hands.dev>"
+                  echo "[resolver] Committed staged files successfully"
+                else
+                  echo "[resolver] No staged files found"
+                fi
+                
                 MAIN_HAS_COMMITS=false
                 if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
                   echo "[resolver] Found commits in main workspace!"
@@ -195,6 +210,19 @@ jobs:
                 CLONE_HAS_COMMITS=false
                 if [ -d /workspace/openhands-output/repo ]; then
                   cd /workspace/openhands-output/repo
+                  
+                  # Check for staged files and commit them if they exist
+                  if ! git diff --cached --quiet; then
+                    echo "[resolver] Found staged files in cloned repo. Committing them..."
+                    git add -A
+                    git commit -m "feat: OpenHands implementation
+                    
+Automated implementation by OpenHands agent.
+                    
+Co-authored-by: OpenHands <openhands@all-hands.dev>"
+                    echo "[resolver] Committed staged files in cloned repo successfully"
+                  fi
+                  
                   if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
                     echo "[resolver] Found commits in cloned repo!"
                     CLONE_HAS_COMMITS=true
