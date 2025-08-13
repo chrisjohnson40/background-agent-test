@@ -1,83 +1,38 @@
-You are working on a development repository that contains both .NET/Angular code and Python scripts.
-
-IMPORTANT: Focus on completing the task step by step. Take action quickly and don't over-analyze.
+You are working on a Garage Inventory Management System built with Angular frontend and .NET backend using Onion Architecture.
 
 ## CRITICAL - ALWAYS COMMIT YOUR WORK
 
 After making ANY changes to files, you MUST commit them:
 
-1. Run: git add -A
-2. Run: git commit -m "feat: [description of what you did]"
+1. Run: `git add -A`
+2. Run: `git commit -m "feat: [description of what you did]"`
 3. The GitHub Action will automatically create the PR after you commit
-WITHOUT COMMITTING, YOUR WORK WILL BE LOST!
 
-## For Simple Python Script Tasks
+**WITHOUT COMMITTING, YOUR WORK WILL BE LOST!**
 
-If asked to create a Python script or simple feature:
+## PROJECT ARCHITECTURE
 
-1. Create the required files directly
-2. Write simple, working code
-3. Add any requested documentation
-4. IMPORTANT: Stage and commit your changes (git add -A && git commit -m "feat: implement [task]")
+### Backend (.NET) - Onion Architecture
 
-Example Python script:
+- **Domain Layer** (`src/GarageInventory.Domain/`): Entities, domain interfaces, business rules
+- **Application Layer** (`src/GarageInventory.Application/`): DTOs, services, use cases, application interfaces
+- **Infrastructure Layer** (`src/GarageInventory.Infrastructure/`): Data access, repositories, external services
+- **API Layer** (`src/GarageInventory.API/`): Controllers, middleware, API configuration
 
-```python
-#!/usr/bin/env python3
-# Simple script description here
-print("Your message here")
-```
+### Frontend (Angular)
 
-## For API Endpoint Tasks (.NET)
+- **Location**: `frontend/src/app/`
+- **Structure**:
+  - `core/` - Singleton services, guards, interceptors
+  - `shared/` - Reusable components, pipes, directives
+  - `features/` - Feature modules (auth/, inventory/, locations/)
+  - `layout/` - App layout components (header/, sidebar/)
 
-If asked to create an API endpoint:
+## FRONTEND DEVELOPMENT GUIDELINES
 
-1. Create Controllers directory if it doesn't exist: src/GarageInventory.API/Controllers
-2. Create or modify a controller with your endpoint
-3. Follow the existing Onion Architecture:
-   - Controllers in API layer (src/GarageInventory.API/Controllers)
-   - DTOs in Application layer (src/GarageInventory.Application/DTOs)
-   - Entities in Domain layer (src/GarageInventory.Domain/Entities)
-   - Repositories in Infrastructure layer (src/GarageInventory.Infrastructure)
-4. Add proper using statements and namespace
-5. IMPORTANT: Commit your changes (git add -A && git commit -m "feat: [description]")
+### Creating/Modifying Angular Components
 
-Example controller:
-
-```csharp
-using Microsoft.AspNetCore.Mvc;
-using GarageInventory.Application.DTOs;
-
-namespace GarageInventory.API.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class ItemsController : ControllerBase
-{
-    [HttpGet("search")]
-    public async Task<IActionResult> SearchItems([FromQuery] string searchTerm, [FromQuery] int? categoryId)
-    {
-        // Simple implementation
-        var results = new List<object>();
-        return Ok(results);
-    }
-}
-```
-
-## For Frontend Tasks (Angular)
-
-If asked to create Angular components or services:
-
-1. Use Angular CLI-style structure in frontend/src/app/
-2. Follow the existing folder structure:
-   - Components in feature folders (inventory/, auth/, locations/)
-   - Services in core/services/
-   - Shared components in shared/
-3. Use standalone components (Angular 14+ style)
-4. Import Angular Material components as needed
-5. IMPORTANT: Commit your changes (git add -A && git commit -m "feat: [description]")
-
-Example component:
+1. **Use Standalone Components** (Angular 14+ style)
 
 ```typescript
 import { Component } from '@angular/core';
@@ -85,20 +40,203 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-  selector: 'app-example',
+  selector: 'app-component-name',
   standalone: true,
   imports: [CommonModule, MatButtonModule],
-  template: `<button mat-raised-button>Example</button>`
+  templateUrl: './component-name.component.html',
+  styleUrl: './component-name.component.scss'
 })
-export class ExampleComponent {}
+export class ComponentNameComponent {}
 ```
+
+2. **Follow Angular Material Design**
+   - Import required Material modules
+   - Use Material components for consistency
+   - Follow the existing theme and styling patterns
+
+3. **Component Best Practices**
+   - Use OnPush change detection when possible
+   - Implement proper TypeScript interfaces
+   - Handle loading states and errors
+   - Unsubscribe from observables properly
+   - Write semantic, accessible HTML
+
+4. **File Naming Convention**
+   - Components: `feature-name.component.ts`
+   - Services: `feature-name.service.ts`
+   - Templates: `feature-name.component.html`
+   - Styles: `feature-name.component.scss`
+
+### Routing
+
+- Update `app.routes.ts` when adding new routes
+- Use lazy loading for feature modules when appropriate
+- Implement route guards for protected routes
+
+## BACKEND DEVELOPMENT GUIDELINES
+
+### Creating API Endpoints
+
+1. **Controller Structure** (`src/GarageInventory.API/Controllers/`)
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using GarageInventory.Application.DTOs;
+using GarageInventory.Application.Interfaces;
+
+namespace GarageInventory.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ResourceController : ControllerBase
+{
+    private readonly IResourceService _service;
+    
+    public ResourceController(IResourceService service)
+    {
+        _service = service;
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await _service.GetAllAsync();
+        return Ok(result);
+    }
+}
+```
+
+2. **Service Layer** (`src/GarageInventory.Application/Services/`)
+   - Implement business logic in services
+   - Use DTOs for data transfer
+   - Handle validation and business rules
+   - Return appropriate response types
+
+3. **Repository Pattern** (`src/GarageInventory.Infrastructure/Repositories/`)
+   - Implement data access logic
+   - Use Entity Framework Core
+   - Follow repository interfaces from Domain layer
+
+4. **DTO Pattern** (`src/GarageInventory.Application/DTOs/`)
+   - Create separate DTOs for requests and responses
+   - Use AutoMapper for entity-DTO mapping
+   - Include validation attributes
+
+## CODE QUALITY STANDARDS
+
+### General Requirements
+
+- Write clean, self-documenting code
+- Follow SOLID principles
+- Implement proper error handling
+- Add logging where appropriate
+- Use async/await for I/O operations
+- Follow Test-Driven Development (TDD) when implementing new features
+
+### Angular Specific
+
+- Use RxJS operators effectively
+- Implement proper form validation
+- Handle HTTP errors gracefully
+- Use TypeScript strict mode
+- Follow Angular Style Guide
+
+### .NET Specific
+
+- Use dependency injection
+- Implement proper exception handling
+- Follow RESTful API conventions
+- Use appropriate HTTP status codes
+- Validate input data
+
+## TEST-DRIVEN DEVELOPMENT (TDD)
+
+### TDD Workflow - MANDATORY for new features
+
+1. **RED**: Write a failing test first
+2. **GREEN**: Write minimal code to make the test pass
+3. **REFACTOR**: Improve the code while keeping tests green
+
+### Implementation Order
+
+1. Write the test file first (`.spec.ts` for Angular, `.Tests.cs` for .NET)
+2. Define what the feature should do through tests
+3. Implement the actual feature to satisfy the tests
+4. Refactor for clarity and performance
+
+### Frontend Testing (Angular)
+
+```typescript
+// Write test first - example.component.spec.ts
+it('should display welcome message', () => {
+  const compiled = fixture.nativeElement;
+  expect(compiled.querySelector('h1')?.textContent).toContain('Welcome');
+});
+```
+
+### Backend Testing (.NET)
+
+```csharp
+// Write test first - ExampleServiceTests.cs
+[Test]
+public async Task GetItems_ShouldReturnFilteredResults()
+{
+    // Arrange
+    var service = new ItemService(_mockRepo.Object);
+    
+    // Act
+    var result = await service.GetItemsAsync("search");
+    
+    // Assert
+    Assert.That(result.Count(), Is.EqualTo(2));
+}
+```
+
+## TESTING STANDARDS
+
+1. **Frontend Tests**
+   - Component tests with Jasmine/Karma
+   - Service tests with HTTP mocking
+   - E2E tests for critical user flows
+   - Minimum 80% code coverage for components
+
+2. **Backend Tests**
+   - Unit tests for services and domain logic
+   - Integration tests for API endpoints
+   - Repository tests with in-memory database
+   - Minimum 80% code coverage for business logic
+
+## WORKFLOW BEST PRACTICES
+
+1. **Before Starting**
+   - Understand the existing codebase structure
+   - Check for similar implementations to follow patterns
+   - Review related files for context
+   - **Write tests FIRST (TDD approach)**
+
+2. **During Development**
+   - Follow RED-GREEN-REFACTOR cycle
+   - Write failing test → Make it pass → Improve code
+   - Make incremental changes
+   - Run tests frequently to ensure nothing breaks
+   - Keep commits focused and atomic
+   - Update related files (routes, imports, etc.)
+
+3. **Before Committing**
+   - Ensure ALL tests pass
+   - Ensure code compiles without errors
+   - Check for proper imports and dependencies
+   - Verify file naming conventions
+   - Remove any debug code or console.logs
+   - Confirm test coverage meets requirements
 
 ## AVOID
 
-- Getting stuck analyzing the codebase endlessly
-- Over-engineering the solution
-- Spending too much time on perfect architecture
-- Creating too many abstractions upfront
-- FORGETTING TO COMMIT YOUR CHANGES
+- Creating files in wrong directories
+- Forgetting to update module imports
+- Hardcoding values that should be configurable
+- Skipping error handling
+- Creating overly complex solutions for simple problems
+- **FORGETTING TO COMMIT YOUR CHANGES**
 
-Remember: Simple, working code that's committed is better than perfect code that's never saved!
+Remember: Focus on delivering working, maintainable code that follows the established patterns in the codebase.
