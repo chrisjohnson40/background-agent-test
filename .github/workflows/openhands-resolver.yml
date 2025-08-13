@@ -178,9 +178,12 @@ jobs:
                 echo "[resolver] no output.jsonl present."
               fi
               
-              # Check if repo directory exists and has changes
+              # Check BOTH locations for changes (agent might work in either)
+              echo "[resolver] checking git status in MAIN workspace (/workspace):"
+              cd /workspace && git status || true
+              
               if [ -d /workspace/openhands-output/repo ]; then
-                echo "[resolver] checking git status in repo:"
+                echo "[resolver] checking git status in cloned repo:"
                 cd /workspace/openhands-output/repo && git status || true
                 echo "[resolver] checking for untracked files:"
                 git status --porcelain || true
@@ -208,16 +211,42 @@ jobs:
               if ! grep -q '"pull_request":' /workspace/openhands-output/output.jsonl 2>/dev/null; then
                 echo "[resolver] No PR detected in output. Checking if we need to create one..."
                 
-                # Check if the agent made changes
+                # First check the main workspace where agent actually worked
+                cd /workspace
+                MAIN_HAS_COMMITS=false
+                if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
+                  echo "[resolver] Found commits in main workspace!"
+                  MAIN_HAS_COMMITS=true
+                fi
+                
+                # Also check the cloned repo just in case
+                CLONE_HAS_COMMITS=false
                 if [ -d /workspace/openhands-output/repo ]; then
                   cd /workspace/openhands-output/repo
-                  
-                  # Check for any commits that haven't been pushed
-                  CURRENT_BRANCH=$(git branch --show-current)
-                  echo "[resolver] Current branch: ${CURRENT_BRANCH}"
-                  
-                  # Check if there are commits not on origin/main
-                  if git rev-list origin/main..HEAD --count 2>/dev/null | grep -q '^[1-9]'; then
+                  if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
+                    echo "[resolver] Found commits in cloned repo!"
+                    CLONE_HAS_COMMITS=true
+                  fi
+                fi
+                
+                # Decide which repo to push from
+                if [ "${MAIN_HAS_COMMITS}" = "true" ]; then
+                  cd /workspace
+                  echo "[resolver] Working with main workspace for PR creation"
+                elif [ "${CLONE_HAS_COMMITS}" = "true" ]; then
+                  cd /workspace/openhands-output/repo
+                  echo "[resolver] Working with cloned repo for PR creation"
+                else
+                  echo "[resolver] No commits found in either location"
+                  cd /workspace
+                fi
+                
+                # Check for any commits that haven't been pushed
+                CURRENT_BRANCH=$(git branch --show-current)
+                echo "[resolver] Current branch: ${CURRENT_BRANCH}"
+                
+                # Check if there are commits not on origin/main
+                if git log origin/main..HEAD --oneline 2>/dev/null | grep -q .; then
                     echo "[resolver] Found unpushed commits. Creating PR..."
                     
                     # Create a branch name if we're on main
@@ -251,9 +280,10 @@ jobs:
                     echo "[resolver] PR creation completed."
                   else
                     echo "[resolver] No unpushed commits found."
-                    git status
+                    git status || true
                   fi
-                  cd /workspace
+                else
+                  echo "[resolver] No commits to push"
                 fi
               else
                 echo "[resolver] SUCCESS: Pull request created!"
