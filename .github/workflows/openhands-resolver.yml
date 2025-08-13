@@ -33,6 +33,7 @@ jobs:
       - name: Run OpenHands Resolver (Docker)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # Use PAT if available, otherwise fall back to GITHUB_TOKEN
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           SANDBOX_VOLUMES: ${{ github.workspace }}:/workspace:rw
@@ -47,12 +48,13 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -w /workspace \
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            -e ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
             -e GITHUB_TOKEN="${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}" \
             -e GH_TOKEN="${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}" \
             -e GITHUB_REPOSITORY="${{ github.repository }}" \
             -e GITHUB_OWNER="${{ github.repository_owner }}" \
             -e GITHUB_API_URL="https://api.github.com" \
-            -e LLM_MODEL="${{ vars.LLM_MODEL || 'openai/gpt-4o' }}" \
+            -e LLM_MODEL="${{ vars.LLM_MODEL || 'anthropic/claude-sonnet-4-20250514' }}" \
             -e SANDBOX_VOLUMES="${{ github.workspace }}:/workspace:rw" \
             -e LLM_NUM_RETRIES="${LLM_NUM_RETRIES}" \
             -e LLM_RETRY_MIN_WAIT="${LLM_RETRY_MIN_WAIT}" \

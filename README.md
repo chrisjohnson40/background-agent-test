@@ -66,7 +66,8 @@ This project follows **Onion Architecture** principles with clear separation of 
 ### AI/Automation
 - **LangGraph**: Intelligent task planning and workflow orchestration
 - **OpenHands**: Autonomous code implementation and issue resolution
-- **OpenAI GPT-4o**: Language model for planning and code generation
+- **Claude Sonnet 4**: Primary language model for code generation (via Anthropic)
+- **OpenAI GPT-4o**: Language model for planning (LangGraph)
 - **GitHub Actions**: CI/CD and workflow automation
 
 ## 🏃‍♂️ Getting Started
@@ -99,12 +100,13 @@ This project follows **Onion Architecture** principles with clear separation of 
 ### Quick Start with AI Workflow
 
 1. **Set up API keys** (add to repository secrets)
-   - `OPENAI_API_KEY`: Your OpenAI API key (required for LangGraph planning and OpenHands)
+   - `ANTHROPIC_API_KEY`: Your Anthropic API key (required for OpenHands with Claude Sonnet 4)
    - `PAT_TOKEN`: GitHub Personal Access Token with `repo` and `workflow` scopes (required for PR creation)
-   - `ANTHROPIC_API_KEY`: Optional, if you prefer Claude over GPT-4o
+   - `OPENAI_API_KEY`: Your OpenAI API key (required for LangGraph planning, optional for OpenHands)
    
    **Optional environment variables:**
    - `PLANNER_MODEL`: Override default model for planning (default: `gpt-4o`)
+   - `LLM_MODEL`: Override default model for OpenHands (default: `anthropic/claude-4-sonnet-20250115`)
    - `LLM_TEMPERATURE`: Override temperature for OpenHands (default: `1`)
    - `OPENHANDS_MAX_ITER`: Max iterations for OpenHands (default: `30`)
 
@@ -380,6 +382,11 @@ The API is documented using OpenAPI/Swagger. Once the application is running, vi
 - Check that `OPENAI_API_KEY` is set in repository secrets
 - Verify you have sufficient API credits
 - Try setting `PLANNER_MODEL` to `gpt-4o-mini` for lower costs
+
+**OpenHands workflow fails with Anthropic API errors**
+- Check that `ANTHROPIC_API_KEY` is set in repository secrets
+- Verify you have sufficient Anthropic credits
+- You can switch back to OpenAI by setting `LLM_MODEL` to `openai/gpt-4o`
 
 **OpenHands gets stuck in loops or runs out of iterations**
 - The agent may be overcomplicating the task
