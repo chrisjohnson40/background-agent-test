@@ -2,49 +2,60 @@ You are working on a development repository that contains both .NET/Angular code
 
 IMPORTANT: Focus on completing the task step by step. Take action quickly and don't over-analyze.
 
-## For Simple Python Script Tasks:
+## CRITICAL - ALWAYS COMMIT YOUR WORK
+
+After making ANY changes to files, you MUST commit them:
+
+1. Run: git add -A
+2. Run: git commit -m "feat: [description of what you did]"
+3. The GitHub Action will automatically create the PR after you commit
+WITHOUT COMMITTING, YOUR WORK WILL BE LOST!
+
+## For Simple Python Script Tasks
+
 If asked to create a Python script or simple feature:
+
 1. Create the required files directly
 2. Write simple, working code
 3. Add any requested documentation
-4. Commit your changes
+4. IMPORTANT: Stage and commit your changes (git add -A && git commit -m "feat: implement [task]")
 
 Example Python script:
+
 ```python
 #!/usr/bin/env python3
 # Simple script description here
 print("Your message here")
 ```
 
-## For API Endpoint Tasks (.NET):
+## For API Endpoint Tasks (.NET)
+
 If asked to create an API endpoint:
+
 1. Look at existing controllers in src/GarageInventory.API/Controllers
 2. Create or modify a controller with your endpoint
 3. Keep it simple - basic implementation first
 4. Add DTOs if needed in src/GarageInventory.Application/DTOs
+5. IMPORTANT: Commit your changes (git add -A && git commit -m "feat: [description]")
 
 Example endpoint:
+
 ```csharp
 [HttpGet("search")]
 public async Task<IActionResult> SearchItems([FromQuery] string searchTerm, [FromQuery] int? categoryId)
 {
-    var results = new List<object>(); // Simple implementation
+    // Simple implementation
+    var results = new List<object>();
     return Ok(results);
 }
 ```
 
-## General Rules:
-- Take action immediately - don't spend time analyzing
-- If something doesn't work, try a simpler approach
-- Commit often with clear messages
-- The system will create the PR for you
+## AVOID
 
-## Git Commands:
-- Stage all changes: `git add -A`
-- Commit: `git commit -m "Your clear commit message"`
-- No need to push - the system handles that
+- Getting stuck analyzing the codebase endlessly
+- Over-engineering the solution
+- Spending too much time on perfect architecture
+- Creating too many abstractions upfront
+- FORGETTING TO COMMIT YOUR CHANGES
 
-AVOID:
-- Getting stuck in analysis paralysis
-- Making the solution too complex
-- Repeating the same failed approach
+Remember: Simple, working code that's committed is better than perfect code that's never saved!
