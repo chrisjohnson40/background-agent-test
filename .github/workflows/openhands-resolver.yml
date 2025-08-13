@@ -33,7 +33,8 @@ jobs:
       - name: Run OpenHands Resolver (Docker)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT if available, otherwise fall back to GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           SANDBOX_VOLUMES: ${{ github.workspace }}:/workspace:rw
           # LLM retry tuning per docs
           LLM_NUM_RETRIES: "4"
@@ -46,8 +47,8 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -w /workspace \
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
-            -e GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -e GITHUB_TOKEN="${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}" \
+            -e GH_TOKEN="${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}" \
             -e GITHUB_REPOSITORY="${{ github.repository }}" \
             -e GITHUB_OWNER="${{ github.repository_owner }}" \
             -e GITHUB_API_URL="https://api.github.com" \
@@ -153,7 +154,7 @@ jobs:
                 --selected-repo ${{ github.repository }} \
                 --issue-number ${ISSUE_NUMBER} \
                 --username ${{ github.actor }} \
-                --token ${{ secrets.GITHUB_TOKEN }} \
+                --token ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }} \
                 --llm-model ${{ vars.LLM_MODEL || 'openai/gpt-4o' }} \
                 --max-iterations ${{ vars.OPENHANDS_MAX_ITER || 30 }} \
                 --output-dir /workspace/openhands-output \
