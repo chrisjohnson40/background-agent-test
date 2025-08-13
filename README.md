@@ -7,16 +7,19 @@ A modern, full-stack inventory management system built with Angular and .NET, de
 This project follows **Onion Architecture** principles with clear separation of concerns:
 
 ### Backend (.NET 9)
+
 - **Domain Layer**: Core business entities and interfaces
 - **Application Layer**: Use cases, DTOs, and application services
 - **Infrastructure Layer**: Data access, external services, and repositories
 - **Presentation Layer**: API controllers and middleware
 
 ### Frontend (Angular 20)
+
 - **Standalone Components**: Modern Angular component architecture
 - **Angular Material**: Consistent UI components
 
 ### Database
+
 - **PostgreSQL**: Primary database with proper normalization
 - **Entity Framework Core**: Code-first approach with migrations
 - **Soft Deletes**: Audit trail support
@@ -24,6 +27,7 @@ This project follows **Onion Architecture** principles with clear separation of 
 ## 🚀 Features
 
 ### Core Inventory Management
+
 - **Multi-location Support**: Garage, workbench, storage totes, cabinets, shelves, external storage
 - **Hierarchical Locations**: Nested location structure (e.g., Garage > Workbench > Drawer 1)
 - **Item Categorization**: Flexible category system with hierarchy
@@ -33,6 +37,7 @@ This project follows **Onion Architecture** principles with clear separation of 
 - **Search & Filter**: Advanced search capabilities with tags and categories
 
 ### Authentication & Security
+
 - **JWT Authentication**: Simple token-based auth with future OAuth2/OIDC support
 - **Role-based Authorization**: Extensible user role system
 - **Password Hashing**: Secure BCrypt password hashing
@@ -41,6 +46,7 @@ This project follows **Onion Architecture** principles with clear separation of 
 ## 🛠️ Technology Stack
 
 ### Backend
+
 - **.NET 9**: Latest .NET framework
 - **ASP.NET Core**: Web API framework
 - **Entity Framework Core**: ORM with PostgreSQL provider
@@ -51,6 +57,7 @@ This project follows **Onion Architecture** principles with clear separation of 
 - **BCrypt.Net**: Password hashing
 
 ### Frontend
+
 - **Angular 20**: Latest Angular framework
 - **Angular Material**: UI component library
 - **TypeScript**: Type-safe JavaScript
@@ -58,12 +65,14 @@ This project follows **Onion Architecture** principles with clear separation of 
 - **RxJS**: Reactive programming
 
 ### Infrastructure
+
 - **Docker**: Containerized development and deployment
 - **PostgreSQL**: Relational database
 - **Redis**: Caching layer (optional)
 - **Nginx**: Reverse proxy and static file serving
 
 ### AI/Automation
+
 - **LangGraph**: Intelligent task planning and workflow orchestration
 - **OpenHands**: Autonomous code implementation and issue resolution
 - **Claude Sonnet 4**: Primary language model for code generation (via Anthropic)
@@ -73,6 +82,7 @@ This project follows **Onion Architecture** principles with clear separation of 
 ## 🏃‍♂️ Getting Started
 
 ### Prerequisites
+
 - **Node.js 22+**: For Angular development
 - **Docker & Docker Compose**: For containerized development
 - **.NET 9 SDK**: For local API development (optional with Docker)
@@ -82,20 +92,22 @@ This project follows **Onion Architecture** principles with clear separation of 
 ### Quick Start with Docker
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd background-agent-test
    ```
 
 2. **Start the development environment**
+
    ```bash
    docker-compose up -d
    ```
 
 3. **Access the applications**
-   - Frontend: http://localhost:4200
-   - API: http://localhost:5000
-   - API Documentation: http://localhost:5000/swagger
+   - Frontend: <http://localhost:4200>
+   - API: <http://localhost:5000>
+   - API Documentation: <http://localhost:5000/swagger>
 
 ### Quick Start with AI Workflow
 
@@ -103,7 +115,7 @@ This project follows **Onion Architecture** principles with clear separation of 
    - `ANTHROPIC_API_KEY`: Your Anthropic API key (required for OpenHands with Claude Sonnet 4)
    - `PAT_TOKEN`: GitHub Personal Access Token with `repo` and `workflow` scopes (required for PR creation)
    - `OPENAI_API_KEY`: Your OpenAI API key (required for LangGraph planning, optional for OpenHands)
-   
+
    **Optional environment variables:**
    - `PLANNER_MODEL`: Override default model for planning (default: `gpt-4o`)
    - `LLM_MODEL`: Override default model for OpenHands (default: `anthropic/claude-sonnet-4-20250514`)
@@ -111,6 +123,7 @@ This project follows **Onion Architecture** principles with clear separation of 
    - `OPENHANDS_MAX_ITER`: Max iterations for OpenHands (default: `30`)
 
 2. **Create a feature specification**
+
    ```bash
    # Create a new feature spec
    cp docs/ai/feature-template.md docs/ai/my-new-feature.md
@@ -130,6 +143,7 @@ This project follows **Onion Architecture** principles with clear separation of 
 ### Local Development Setup
 
 #### Backend (.NET API)
+
 ```bash
 cd src
 dotnet restore
@@ -138,6 +152,7 @@ dotnet run --project GarageInventory.API
 ```
 
 #### Frontend (Angular)
+
 ```bash
 cd frontend
 npm install
@@ -145,6 +160,7 @@ ng serve
 ```
 
 #### Database
+
 ```bash
 # Using Docker
 docker run --name garage-db -e POSTGRES_PASSWORD=garage_password -e POSTGRES_USER=garage_user -e POSTGRES_DB=garage_inventory -p 5432:5432 -d postgres:15-alpine
@@ -175,12 +191,14 @@ The project includes an intelligent planning system built with LangGraph that ca
 ### Using the Planning System
 
 #### Method 1: GitHub Actions (Recommended)
+
 1. Create a feature specification file in `docs/ai/your-feature.md`
 2. Go to **Actions** → **Plan feature into issues**
 3. Click **Run workflow** and enter the path to your spec file
 4. The system will automatically create labeled GitHub issues
 
 #### Method 2: Local Development
+
 ```bash
 # Install the planner
 cd agents/orchestrator
@@ -222,7 +240,9 @@ Any architectural considerations or constraints
 Once issues are created by the planner, OpenHands can automatically resolve them.
 
 ### OpenHands Workflow
+
 Issues labeled with `fix-me` automatically trigger the OpenHands agent, which will:
+
 1. Analyze the issue description
 2. Implement the required solution
 3. Create tests if applicable
@@ -254,6 +274,7 @@ The system uses these labels for organization and automation:
 - **`p1/p2/p3`**: Priority levels
 
 ### Background Agent Capabilities
+
 - **Autonomous Development**: Agents can work on specific features independently
 - **Code Reviews**: Automated code quality checks and suggestions
 - **Documentation**: Auto-generation of documentation and comments
@@ -263,20 +284,24 @@ The system uses these labels for organization and automation:
 ### Best Practices for AI-Assisted Development
 
 #### Task Assignment
+
 When working with background agents, assign **specific, well-defined tasks**:
 
 ✅ **Good Task Examples:**
+
 - "Implement user authentication with JWT tokens"
 - "Create inventory item CRUD operations with validation"
 - "Add image upload functionality for inventory items"
 - "Implement location hierarchy with drag-and-drop reordering"
 
 ❌ **Poor Task Examples:**
+
 - "Make the app better"
 - "Fix all bugs"
 - "Add some features"
 
 #### Agent Collaboration
+
 - **Clear Interfaces**: Define clear contracts between components
 - **Integration Tests**: Ensure different agents' work integrates properly
 - **Consistent Patterns**: Follow established architectural patterns
@@ -343,11 +368,13 @@ background-agent-test/
 ## 🧪 Testing Strategy
 
 ### Backend Testing
+
 - **Unit Tests**: Domain logic and application services
 - **Integration Tests**: API endpoints and database operations
 - **Test Coverage**: Minimum 80% for business logic
 
 ### Frontend Testing
+
 - **Unit Tests**: Components and services
 - **Integration Tests**: Component interactions
 - **E2E Tests**: Critical user workflows
@@ -355,11 +382,13 @@ background-agent-test/
 ## 🚀 Deployment
 
 ### Development
+
 ```bash
 docker-compose up
 ```
 
 ### Production
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
 ```
@@ -367,37 +396,44 @@ docker-compose -f docker-compose.prod.yml up -d
 ## 📝 API Documentation
 
 The API is documented using OpenAPI/Swagger. Once the application is running, visit:
-- Development: http://localhost:5000/swagger
-- Production: https://your-domain.com/swagger
+
+- Development: <http://localhost:5000/swagger>
+- Production: <https://your-domain.com/swagger>
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
 **OpenHands workflow fails with "Resource not accessible by integration"**
+
 - Solution: Use `PAT_TOKEN` instead of `GITHUB_TOKEN` in repository secrets
 - The PAT needs `repo` and `workflow` scopes
 
 **Planning workflow fails with OpenAI API errors**
+
 - Check that `OPENAI_API_KEY` is set in repository secrets
 - Verify you have sufficient API credits
 - Try setting `PLANNER_MODEL` to `gpt-4o-mini` for lower costs
 
 **OpenHands workflow fails with Anthropic API errors**
+
 - Check that `ANTHROPIC_API_KEY` is set in repository secrets
 - Verify you have sufficient Anthropic credits
 - You can switch back to OpenAI by setting `LLM_MODEL` to `openai/gpt-4o`
 
 **OpenHands gets stuck in loops or runs out of iterations**
+
 - The agent may be overcomplicating the task
 - Try breaking down complex issues into smaller, more specific tasks
 - Check the `.openhands_instructions` file for guidance
 
 **Validation workflow creates infinite loops**
+
 - The workflow now prevents auto-labeling OpenHands-created PRs
 - If issues persist, manually remove the `fix-me` label from problematic PRs
 
 **Build failures in validation workflow**
+
 - Currently tests are disabled during setup phase
 - Focus on getting basic structure working first
 

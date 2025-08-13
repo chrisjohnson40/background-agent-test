@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -54,8 +52,11 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=development
     networks:
       - garage-network
+    depends_on:
+      - api
     develop:
       watch:
         - action: sync
