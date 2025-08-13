@@ -171,7 +171,7 @@ jobs:
                 echo "[resolver] tail output.jsonl:"
                 tail -n 200 /workspace/openhands-output/output.jsonl || true
                 echo "[resolver] checking what commands the agent ran:"
-                grep -o '"command":"[^"]*"' /workspace/openhands-output/output.jsonl | tail -n 20 || true
+                grep -o "\"command\":\"[^\"]*\"" /workspace/openhands-output/output.jsonl | tail -n 20 || true
                 echo "[resolver] checking for git commands:"
                 grep -i "git add\|git commit\|git push" /workspace/openhands-output/output.jsonl | tail -n 10 || true
               else
@@ -208,7 +208,7 @@ jobs:
               fi
               
               # Check if PR was created
-              if ! grep -q '"pull_request":' /workspace/openhands-output/output.jsonl 2>/dev/null; then
+              if ! grep -q "\"pull_request\":" /workspace/openhands-output/output.jsonl 2>/dev/null; then
                 echo "[resolver] No PR detected in output. Checking if we need to create one..."
                 
                 # First check the main workspace where agent actually worked
@@ -285,6 +285,6 @@ jobs:
               else
                 echo "[resolver] SUCCESS: Pull request created!"
                 # Show PR URL
-                grep '"pull_request":' /workspace/openhands-output/output.jsonl | tail -n 1 || true
+                grep "\"pull_request\":" /workspace/openhands-output/output.jsonl | tail -n 1 || true
               fi
             '
