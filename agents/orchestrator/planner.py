@@ -29,18 +29,25 @@ Break the following SPEC into atomic GitHub issues in this EXACT order:
 2. IMPLEMENTATION issues second (make tests pass)  
 3. REFINEMENT issues last (styling, accessibility, etc.)
 
+OPTIMIZATION RULES to minimize "no changes needed" issues:
+- COMBINE related tests into single comprehensive test issues
+- COMBINE implementation that naturally goes together
+- AVOID creating separate issues for work already covered by other issues
+- Each issue MUST require actual code changes
+- Example: "Write all Navbar tests" instead of 4 separate test issues
+
 TITLE FORMAT: Use this EXACT format for all issue titles:
 "[FEATURE-ID] Step X of Y: Description"
 
 Where:
-- FEATURE-ID: Uppercase feature identifier (e.g., LANDING-001, AUTH-002, INVENTORY-003)
+- FEATURE-ID: Uppercase feature identifier (e.g., NAVBAR-001, AUTH-002, INVENTORY-003)
 - X: Current step number (1, 2, 3, etc.)
-- Y: Total number of steps in this feature
+- Y: Total number of steps in this feature (aim for 3-5 steps total)
 - Description: Clear, concise description of the task
 
 Examples:
-- "[LANDING-001] Step 1 of 7: Write Tests for LandingPageComponent Creation"
-- "[LANDING-001] Step 5 of 7: Implement LandingPageComponent"
+- "[NAVBAR-001] Step 1 of 4: Write comprehensive tests for Navbar component"
+- "[NAVBAR-001] Step 2 of 4: Implement Navbar component with routing"
 
 Each issue must include:
 - title following the exact format above
