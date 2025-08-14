@@ -97,6 +97,7 @@ def create_issue(task: Task):
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         issue_url = result.stdout.strip()
         issue_number = issue_url.split('/')[-1]
+        print(issue_url)  # Print the issue URL for logging
         
         # If AI-ready, add fix-me label separately to trigger the labeled event
         if task.ai_ready:
@@ -105,6 +106,8 @@ def create_issue(task: Task):
                 "--add-label", "fix-me"
             ])
             print(f"Added fix-me label to issue #{issue_number} to trigger OpenHands")
+        else:
+            print(f"Issue #{issue_number} created without fix-me label (will be triggered later by pipeline)")
             
     except subprocess.CalledProcessError as e:
         print(f"ERROR creating issue '{task.title}': {e}")
@@ -141,8 +144,10 @@ def cli(spec_path: str = typer.Argument(..., help="Path to feature spec .md")):
             print(f"Failed to create issue '{t.title}': {e}")
             continue
             
-    print(f"Created {created_count}/{len(tasks)} issues from {spec_path}")
-    print("Only the first issue has the fix-me label. Subsequent issues will be triggered when previous ones are completed.")
+    print(f"\n✅ Created {created_count}/{len(tasks)} issues from {spec_path}")
+    if created_count > 0:
+        print("🚀 Only the FIRST issue has the fix-me label to start the pipeline.")
+        print("📋 Subsequent issues will be triggered automatically when previous ones are completed.")
 
 if __name__ == "__main__":
     app()
