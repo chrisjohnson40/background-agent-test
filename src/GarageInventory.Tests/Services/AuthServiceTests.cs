@@ -471,4 +471,352 @@ public class AuthServiceTests
         capturedUser!.CreatedAt.Should().BeAfter(beforeRegistration.AddSeconds(-1));
         capturedUser.CreatedAt.Should().BeBefore(afterRegistration.AddSeconds(1));
     }
+
+    #region Login Tests
+
+    [Fact]
+    public async Task LoginAsync_WithValidCredentials_ShouldReturnLoginResponse()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "johndoe",
+            Password = "Password1!"
+        };
+
+        var existingUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = loginDto.Username,
+            Email = "john@example.com",
+            FirstName = "John",
+            LastName = "Doe",
+            PasswordHash = "hashedPassword",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var expectedToken = "jwt-token-here";
+        var expectedExpiresAt = DateTime.UtcNow.AddHours(24);
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
+        var result = await _authService.LoginAsync(loginDto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Token.Should().NotBeNullOrEmpty();
+        result.User.Should().NotBeNull();
+        result.User.Id.Should().Be(existingUser.Id);
+        result.User.Username.Should().Be(existingUser.Username);
+        result.User.Email.Should().Be(existingUser.Email);
+        result.User.FirstName.Should().Be(existingUser.FirstName);
+        result.User.LastName.Should().Be(existingUser.LastName);
+        result.User.IsActive.Should().BeTrue();
+        result.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+
+        _userRepositoryMock.Verify(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithValidEmailAsUsername_ShouldReturnLoginResponse()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "john@example.com", // Using email as username
+            Password = "Password1!"
+        };
+
+        var existingUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "johndoe",
+            Email = loginDto.Username,
+            FirstName = "John",
+            LastName = "Doe",
+            PasswordHash = "hashedPassword",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
+        var result = await _authService.LoginAsync(loginDto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.User.Email.Should().Be(existingUser.Email);
+        result.User.Username.Should().Be(existingUser.Username);
+
+        _userRepositoryMock.Verify(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.GetByEmailAsync(loginDto.Username, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithInvalidUsername_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "nonexistentuser",
+            Password = "Password1!"
+        };
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            _authService.LoginAsync(loginDto));
+        
+        exception.Message.Should().Be("Invalid username or password");
+
+        _userRepositoryMock.Verify(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.GetByEmailAsync(loginDto.Username, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithInvalidPassword_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "johndoe",
+            Password = "WrongPassword1!"
+        };
+
+        var existingUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = loginDto.Username,
+            Email = "john@example.com",
+            PasswordHash = "hashedPassword",
+            IsActive = true
+        };
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            _authService.LoginAsync(loginDto));
+        
+        exception.Message.Should().Be("Invalid username or password");
+
+        _userRepositoryMock.Verify(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithInactiveUser_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "johndoe",
+            Password = "Password1!"
+        };
+
+        var inactiveUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = loginDto.Username,
+            Email = "john@example.com",
+            PasswordHash = "hashedPassword",
+            IsActive = false // User is inactive
+        };
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(inactiveUser);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            _authService.LoginAsync(loginDto));
+        
+        exception.Message.Should().Be("Account is inactive");
+
+        _userRepositoryMock.Verify(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    public async Task LoginAsync_WithEmptyUsername_ShouldThrowArgumentException(string? username)
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = username!,
+            Password = "Password1!"
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+            _authService.LoginAsync(loginDto));
+        
+        exception.Message.Should().Contain("Username is required");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    public async Task LoginAsync_WithEmptyPassword_ShouldThrowArgumentException(string? password)
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "johndoe",
+            Password = password!
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+            _authService.LoginAsync(loginDto));
+        
+        exception.Message.Should().Contain("Password is required");
+    }
+
+    [Fact]
+    public async Task LoginAsync_ShouldUpdateLastLoginAt()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "johndoe",
+            Password = "Password1!"
+        };
+
+        var existingUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = loginDto.Username,
+            Email = "john@example.com",
+            PasswordHash = "hashedPassword",
+            IsActive = true,
+            LastLoginAt = null
+        };
+
+        var beforeLogin = DateTime.UtcNow;
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
+        await _authService.LoginAsync(loginDto);
+        var afterLogin = DateTime.UtcNow;
+
+        // Assert
+        existingUser.LastLoginAt.Should().NotBeNull();
+        existingUser.LastLoginAt.Should().BeAfter(beforeLogin.AddSeconds(-1));
+        existingUser.LastLoginAt.Should().BeBefore(afterLogin.AddSeconds(1));
+
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LoginAsync_ShouldGenerateValidToken()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "johndoe",
+            Password = "Password1!"
+        };
+
+        var existingUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = loginDto.Username,
+            Email = "john@example.com",
+            FirstName = "John",
+            LastName = "Doe",
+            PasswordHash = "hashedPassword",
+            IsActive = true
+        };
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
+        var result = await _authService.LoginAsync(loginDto);
+
+        // Assert
+        result.Token.Should().NotBeNullOrEmpty();
+        result.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+        
+        // Verify token can be validated
+        var isValidToken = await _authService.ValidateTokenAsync(result.Token);
+        isValidToken.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task LoginAsync_ShouldReturnCorrectUserData()
+    {
+        // Arrange
+        var loginDto = new LoginDto
+        {
+            Username = "johndoe",
+            Password = "Password1!"
+        };
+
+        var existingUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = loginDto.Username,
+            Email = "john@example.com",
+            FirstName = "John",
+            LastName = "Doe",
+            PasswordHash = "hashedPassword",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow.AddDays(-30)
+        };
+
+        _userRepositoryMock.Setup(x => x.GetByUsernameAsync(loginDto.Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
+        var result = await _authService.LoginAsync(loginDto);
+
+        // Assert
+        result.User.Should().NotBeNull();
+        result.User.Id.Should().Be(existingUser.Id);
+        result.User.Username.Should().Be(existingUser.Username);
+        result.User.Email.Should().Be(existingUser.Email);
+        result.User.FirstName.Should().Be(existingUser.FirstName);
+        result.User.LastName.Should().Be(existingUser.LastName);
+        result.User.FullName.Should().Be($"{existingUser.FirstName} {existingUser.LastName}");
+        result.User.IsActive.Should().Be(existingUser.IsActive);
+        result.User.CreatedAt.Should().Be(existingUser.CreatedAt);
+        result.User.LastLoginAt.Should().NotBeNull();
+    }
+
+    #endregion Login Tests
 }
