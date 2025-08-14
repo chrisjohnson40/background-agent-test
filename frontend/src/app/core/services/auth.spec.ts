@@ -219,4 +219,210 @@ describe('Auth', () => {
       expect(service.getCurrentUser()).toBeNull();
     });
   });
+
+  describe('Login Functionality', () => {
+    it('should successfully login with valid credentials', async () => {
+      const email = 'test@example.com';
+      const password = 'validpassword';
+
+      await service.login(email, password);
+
+      expect(service.isAuthenticated()).toBeTruthy();
+      const currentUser = service.getCurrentUser();
+      expect(currentUser).toBeTruthy();
+      expect(currentUser?.email).toBe(email);
+    });
+
+    it('should handle login with username instead of email', async () => {
+      const username = 'testuser';
+      const password = 'validpassword';
+
+      await service.login(username, password);
+
+      expect(service.isAuthenticated()).toBeTruthy();
+      const currentUser = service.getCurrentUser();
+      expect(currentUser).toBeTruthy();
+    });
+
+    it('should reject login with empty username', async () => {
+      try {
+        await service.login('', 'password');
+        fail('Should have thrown an error');
+      } catch (error: any) {
+        expect(error.message).toContain('Username is required');
+      }
+    });
+
+    it('should reject login with empty password', async () => {
+      try {
+        await service.login('testuser', '');
+        fail('Should have thrown an error');
+      } catch (error: any) {
+        expect(error.message).toContain('Password is required');
+      }
+    });
+
+    it('should handle login failure with invalid credentials', async () => {
+      service.login('invalid@example.com', 'wrongpassword').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.error.message).toBe('Invalid username or password');
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({
+        username: 'invalid@example.com',
+        password: 'wrongpassword'
+      });
+      req.flush({ error: { message: 'Invalid username or password' } }, { status: 401, statusText: 'Unauthorized' });
+    });
+
+    it('should handle login failure with inactive account', async () => {
+      service.login('inactive@example.com', 'password').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.error.message).toBe('Account is inactive');
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush({ error: { message: 'Account is inactive' } }, { status: 401, statusText: 'Unauthorized' });
+    });
+
+    it('should make HTTP request to login endpoint', async () => {
+      const loginRequest = {
+        username: 'testuser',
+        password: 'password123'
+      };
+
+      const mockResponse = {
+        token: 'jwt-token-here',
+        user: {
+          id: 1,
+          name: 'Test User',
+          email: 'test@example.com',
+          username: 'testuser'
+        },
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      service.login(loginRequest.username, loginRequest.password).subscribe(response => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(loginRequest);
+      req.flush(mockResponse);
+    });
+
+    it('should store authentication token after successful login', async () => {
+      const mockResponse = {
+        token: 'jwt-token-here',
+        user: {
+          id: 1,
+          name: 'Test User',
+          email: 'test@example.com',
+          username: 'testuser'
+        },
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      service.login('testuser', 'password').subscribe(() => {
+        expect(service.isAuthenticated()).toBeTruthy();
+        expect(service.getCurrentUser()).toEqual(mockResponse.user);
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush(mockResponse);
+    });
+
+    it('should handle network errors during login', async () => {
+      service.login('testuser', 'password').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(0);
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.error(new ErrorEvent('Network error'));
+    });
+
+    it('should handle server errors during login', async () => {
+      service.login('testuser', 'password').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(500);
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush({ error: { message: 'Internal server error' } }, { status: 500, statusText: 'Internal Server Error' });
+    });
+
+    it('should validate username format when using email', async () => {
+      const validEmails = ['test@example.com', 'user.name@domain.co.uk', 'user+tag@example.org'];
+      const invalidEmails = ['invalid-email', 'test@', '@example.com', 'test.example.com'];
+
+      for (const email of validEmails) {
+        expect(service.isValidEmail(email)).toBeTruthy(`${email} should be valid`);
+      }
+
+      for (const email of invalidEmails) {
+        expect(service.isValidEmail(email)).toBeFalsy(`${email} should be invalid`);
+      }
+    });
+
+    it('should handle concurrent login attempts', async () => {
+      const promise1 = service.login('user1@example.com', 'password1');
+      const promise2 = service.login('user2@example.com', 'password2');
+
+      const requests = httpMock.match('/api/auth/login');
+      expect(requests.length).toBe(2);
+
+      requests[0].flush({
+        token: 'token1',
+        user: { id: 1, name: 'User 1', email: 'user1@example.com', username: 'user1' },
+        expiresAt: new Date().toISOString()
+      });
+
+      requests[1].flush({
+        token: 'token2',
+        user: { id: 2, name: 'User 2', email: 'user2@example.com', username: 'user2' },
+        expiresAt: new Date().toISOString()
+      });
+
+      await Promise.all([promise1, promise2]);
+    });
+  });
+
+  describe('Login Form Validation', () => {
+    it('should validate minimum username length', () => {
+      expect(service.isValidUsername('ab')).toBeFalsy();
+      expect(service.isValidUsername('abc')).toBeTruthy();
+      expect(service.isValidUsername('validusername')).toBeTruthy();
+    });
+
+    it('should validate minimum password length', () => {
+      expect(service.isValidPassword('12345')).toBeFalsy();
+      expect(service.isValidPassword('123456')).toBeTruthy();
+      expect(service.isValidPassword('validpassword')).toBeTruthy();
+    });
+
+    it('should validate required fields', () => {
+      expect(service.isValidUsername('')).toBeFalsy();
+      expect(service.isValidUsername('   ')).toBeFalsy();
+      expect(service.isValidPassword('')).toBeFalsy();
+      expect(service.isValidPassword('   ')).toBeFalsy();
+    });
+
+    it('should accept both username and email formats', () => {
+      expect(service.isValidUsername('testuser')).toBeTruthy();
+      expect(service.isValidUsername('test@example.com')).toBeTruthy();
+      expect(service.isValidUsername('user.name@domain.co.uk')).toBeTruthy();
+    });
+  });
 });
