@@ -3,7 +3,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { Location } from '@angular/common';
 import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
