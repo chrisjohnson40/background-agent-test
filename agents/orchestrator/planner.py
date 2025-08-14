@@ -129,9 +129,12 @@ def cli(spec_path: str = typer.Argument(..., help="Path to feature spec .md")):
     
     for i, t in enumerate(tasks):
         try:
-            # Temporarily disable AI-ready for all but first issue
+            # Force first issue to be AI-ready, disable for all others
             original_ai_ready = t.ai_ready
-            if i > 0:  # Only first issue gets fix-me label initially
+            if i == 0:  # First issue ALWAYS gets fix-me label
+                print(f"🚀 Setting first issue to AI-ready (was: {original_ai_ready})")
+                t.ai_ready = True
+            else:  # All other issues don't get fix-me initially
                 t.ai_ready = False
                 
             create_issue(t)
