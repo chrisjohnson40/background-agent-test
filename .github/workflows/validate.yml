@@ -14,11 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: '9.0.x' }
+        with: 
+          dotnet-version: '9.0.x'
+          include-prerelease: false
+      - name: Debug .NET Info
+        run: |
+          dotnet --version
+          dotnet --info
+          
       - name: Restore & Test
         working-directory: ./src
         run: |
-          dotnet restore
+          dotnet restore --verbosity normal
           # Just build for now, fix compilation issues first
           dotnet build --configuration Release --no-restore --verbosity normal
           echo "Build completed. Tests disabled during setup phase."
