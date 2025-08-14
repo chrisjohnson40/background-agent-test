@@ -77,14 +77,8 @@ jobs:
                   exit 1
                 fi
                 
-                # Add comment explaining the pipeline (with error handling)
-                COMMENT_BODY="🚀 **Pipeline Trigger**: This issue is now ready to work on after completion of issue #$COMPLETED_ISSUE. **Feature Progress**: $FEATURE_ID - Step $COMPLETED_STEP of $TOTAL_STEPS completed ✅ **Next Step**: $NEXT_STEP of $TOTAL_STEPS. Previous step has been merged successfully. You can now proceed with this step."
-                
-                if gh issue comment $NEXT_ISSUE --body "$COMMENT_BODY"; then
-                  echo "💬 Added pipeline trigger comment to issue #$NEXT_ISSUE"
-                else
-                  echo "⚠️  Warning: Failed to add comment to issue #$NEXT_ISSUE (but label was added successfully)"
-                fi
+                # Pipeline comment removed to prevent duplicate workflow triggers
+                echo "💬 Skipping comment to avoid triggering duplicate workflows"
                 
                 echo "✅ Successfully triggered issue #$NEXT_ISSUE (Step $NEXT_STEP)"
                 
