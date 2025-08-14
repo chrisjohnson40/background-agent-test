@@ -260,6 +260,89 @@ If you determine that an issue requires NO code changes:
    - Remove any debug code or console.logs
    - Confirm test coverage meets requirements
 
+## DOCUMENTATION REQUIREMENTS
+
+### When to Update Documentation
+
+You MUST update relevant documentation when:
+
+1. **Adding New Features**
+   - Update README.md with new feature description
+   - Add/update relevant sections in docs/
+   - Update API documentation if new endpoints added
+   - Document new environment variables or configuration
+
+2. **Changing Architecture**
+   - Update architecture diagrams
+   - Document new patterns or practices
+   - Update folder structure documentation
+   - Modify development guidelines
+
+3. **Modifying APIs**
+   - Update OpenAPI/Swagger specifications
+   - Document request/response changes
+   - Update error code documentation
+   - Add examples for new endpoints
+
+4. **Adding Dependencies**
+   - Update package.json or .csproj documentation
+   - Document why the dependency was added
+   - Include configuration requirements
+   - Update installation instructions
+
+5. **Changing Configuration**
+   - Update environment variable documentation
+   - Document new settings or options
+   - Update docker-compose if needed
+   - Modify deployment documentation
+
+### Documentation Standards
+
+1. **Code Documentation**
+   ```typescript
+   /**
+    * Service for managing user authentication
+    * @description Handles login, logout, and token management
+    */
+   ```
+   
+   ```csharp
+   /// <summary>
+   /// Retrieves inventory items for the authenticated user
+   /// </summary>
+   /// <param name="filter">Optional filter criteria</param>
+   /// <returns>List of inventory items</returns>
+   ```
+
+2. **README Updates**
+   - Keep feature list current
+   - Update setup instructions if process changes
+   - Document new environment variables
+   - Add troubleshooting for new issues
+
+3. **API Documentation**
+   - Use JSDoc for TypeScript/JavaScript
+   - Use XML comments for C#/.NET
+   - Include request/response examples
+   - Document error scenarios
+
+4. **Inline Comments**
+   - Explain complex business logic
+   - Document workarounds or temporary solutions
+   - Add TODO comments for future improvements
+   - Reference issue numbers for context
+
+### Documentation Checklist
+
+Before committing, verify:
+- [ ] README.md reflects any new features or changes
+- [ ] API documentation updated for new/changed endpoints
+- [ ] Code comments added for complex logic
+- [ ] Configuration changes documented
+- [ ] Migration steps documented if needed
+- [ ] Test documentation updated
+- [ ] Architecture diagrams current (if applicable)
+
 ## AVOID
 
 - Creating files in wrong directories
@@ -268,5 +351,6 @@ If you determine that an issue requires NO code changes:
 - Skipping error handling
 - Creating overly complex solutions for simple problems
 - **FORGETTING TO COMMIT YOUR CHANGES**
+- **FORGETTING TO UPDATE DOCUMENTATION**
 
-Remember: Focus on delivering working, maintainable code that follows the established patterns in the codebase.
+Remember: Focus on delivering working, maintainable code that follows the established patterns in the codebase, and keep documentation current for future developers and AI agents.
