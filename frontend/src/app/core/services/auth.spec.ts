@@ -425,4 +425,401 @@ describe('Auth', () => {
       expect(service.isValidUsername('user.name@domain.co.uk')).toBeTruthy();
     });
   });
+
+  describe('Session Management - Token Storage', () => {
+    beforeEach(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+
+    it('should store token in localStorage after successful login', () => {
+      const mockResponse = {
+        token: 'jwt-token-here',
+        user: {
+          id: 1,
+          name: 'Test User',
+          email: 'test@example.com',
+          username: 'testuser'
+        },
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      service.login('testuser', 'password').subscribe(() => {
+        expect(localStorage.getItem('auth_token')).toBe(mockResponse.token);
+        expect(localStorage.getItem('auth_user')).toBe(JSON.stringify(mockResponse.user));
+        expect(localStorage.getItem('auth_expires_at')).toBe(mockResponse.expiresAt);
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush(mockResponse);
+    });
+
+    it('should retrieve token from localStorage on service initialization', () => {
+      const mockToken = 'stored-jwt-token';
+      const mockUser = {
+        id: 1,
+        name: 'Stored User',
+        email: 'stored@example.com',
+        username: 'storeduser'
+      };
+      const mockExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+      localStorage.setItem('auth_token', mockToken);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
+      localStorage.setItem('auth_expires_at', mockExpiresAt);
+
+      // Create new service instance to test initialization
+      const newService = TestBed.inject(Auth);
+      
+      expect(newService.getToken()).toBe(mockToken);
+      expect(newService.getCurrentUser()).toEqual(mockUser);
+      expect(newService.isAuthenticated()).toBeTruthy();
+    });
+
+    it('should persist authentication state across browser sessions', () => {
+      const mockResponse = {
+        token: 'persistent-token',
+        user: {
+          id: 1,
+          name: 'Persistent User',
+          email: 'persistent@example.com',
+          username: 'persistentuser'
+        },
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      service.login('persistentuser', 'password').subscribe(() => {
+        // Simulate browser restart by creating new service instance
+        const newService = TestBed.inject(Auth);
+        
+        expect(newService.isAuthenticated()).toBeTruthy();
+        expect(newService.getCurrentUser()).toEqual(mockResponse.user);
+        expect(newService.getToken()).toBe(mockResponse.token);
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush(mockResponse);
+    });
+
+    it('should clear token storage on logout', () => {
+      // First login
+      const mockResponse = {
+        token: 'token-to-clear',
+        user: {
+          id: 1,
+          name: 'User To Logout',
+          email: 'logout@example.com',
+          username: 'logoutuser'
+        },
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      service.login('logoutuser', 'password').subscribe(() => {
+        // Verify token is stored
+        expect(localStorage.getItem('auth_token')).toBe(mockResponse.token);
+        
+        // Logout
+        service.logout();
+        
+        // Verify all auth data is cleared
+        expect(localStorage.getItem('auth_token')).toBeNull();
+        expect(localStorage.getItem('auth_user')).toBeNull();
+        expect(localStorage.getItem('auth_expires_at')).toBeNull();
+        expect(service.isAuthenticated()).toBeFalsy();
+        expect(service.getCurrentUser()).toBeNull();
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush(mockResponse);
+    });
+
+    it('should handle corrupted localStorage data gracefully', () => {
+      localStorage.setItem('auth_token', 'valid-token');
+      localStorage.setItem('auth_user', 'invalid-json');
+      localStorage.setItem('auth_expires_at', 'invalid-date');
+
+      const newService = TestBed.inject(Auth);
+      
+      expect(newService.isAuthenticated()).toBeFalsy();
+      expect(newService.getCurrentUser()).toBeNull();
+      expect(newService.getToken()).toBeNull();
+    });
+  });
+
+  describe('Session Management - Token Expiration', () => {
+    beforeEach(() => {
+      localStorage.clear();
+      jasmine.clock().install();
+    });
+
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
+
+    it('should detect expired tokens', () => {
+      const expiredDate = new Date(Date.now() - 1000).toISOString(); // 1 second ago
+      localStorage.setItem('auth_token', 'expired-token');
+      localStorage.setItem('auth_expires_at', expiredDate);
+
+      const newService = TestBed.inject(Auth);
+      
+      expect(newService.isTokenExpired()).toBeTruthy();
+      expect(newService.isAuthenticated()).toBeFalsy();
+    });
+
+    it('should detect valid tokens', () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
+      localStorage.setItem('auth_token', 'valid-token');
+      localStorage.setItem('auth_expires_at', futureDate);
+
+      const newService = TestBed.inject(Auth);
+      
+      expect(newService.isTokenExpired()).toBeFalsy();
+      expect(newService.isAuthenticated()).toBeTruthy();
+    });
+
+    it('should automatically logout when token expires', () => {
+      const mockResponse = {
+        token: 'short-lived-token',
+        user: {
+          id: 1,
+          name: 'Test User',
+          email: 'test@example.com',
+          username: 'testuser'
+        },
+        expiresAt: new Date(Date.now() + 1000).toISOString() // 1 second from now
+      };
+
+      service.login('testuser', 'password').subscribe(() => {
+        expect(service.isAuthenticated()).toBeTruthy();
+        
+        // Fast forward time to expire token
+        jasmine.clock().tick(2000);
+        
+        // Check if automatically logged out
+        expect(service.isAuthenticated()).toBeFalsy();
+        expect(service.getCurrentUser()).toBeNull();
+        expect(localStorage.getItem('auth_token')).toBeNull();
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush(mockResponse);
+    });
+
+    it('should emit authentication state changes on token expiration', () => {
+      let authStateChanges: boolean[] = [];
+      
+      service.isAuthenticated$.subscribe(isAuth => {
+        authStateChanges.push(isAuth);
+      });
+
+      const mockResponse = {
+        token: 'expiring-token',
+        user: {
+          id: 1,
+          name: 'Test User',
+          email: 'test@example.com',
+          username: 'testuser'
+        },
+        expiresAt: new Date(Date.now() + 1000).toISOString()
+      };
+
+      service.login('testuser', 'password').subscribe(() => {
+        // Fast forward to expire token
+        jasmine.clock().tick(2000);
+        
+        expect(authStateChanges).toContain(false); // Initial state
+        expect(authStateChanges).toContain(true);  // After login
+        expect(authStateChanges[authStateChanges.length - 1]).toBeFalsy(); // After expiration
+      });
+
+      const req = httpMock.expectOne('/api/auth/login');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('Session Management - Token Refresh', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('should refresh token before expiration', () => {
+      const originalToken = 'original-token';
+      const refreshedToken = 'refreshed-token';
+      const nearExpiryDate = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes from now
+      const newExpiryDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
+
+      localStorage.setItem('auth_token', originalToken);
+      localStorage.setItem('auth_expires_at', nearExpiryDate);
+
+      service.refreshToken().subscribe(response => {
+        expect(response.token).toBe(refreshedToken);
+        expect(localStorage.getItem('auth_token')).toBe(refreshedToken);
+        expect(localStorage.getItem('auth_expires_at')).toBe(newExpiryDate);
+      });
+
+      const req = httpMock.expectOne('/api/auth/refresh');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Authorization')).toBe(`Bearer ${originalToken}`);
+      req.flush({
+        token: refreshedToken,
+        expiresAt: newExpiryDate
+      });
+    });
+
+    it('should automatically refresh token when near expiration', () => {
+      const mockResponse = {
+        token: 'auto-refresh-token',
+        user: {
+          id: 1,
+          name: 'Test User',
+          email: 'test@example.com',
+          username: 'testuser'
+        },
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes from now
+      };
+
+      service.login('testuser', 'password').subscribe(() => {
+        // Service should automatically attempt to refresh token
+        expect(service.shouldRefreshToken()).toBeTruthy();
+      });
+
+      const loginReq = httpMock.expectOne('/api/auth/login');
+      loginReq.flush(mockResponse);
+
+      // Expect automatic refresh request
+      const refreshReq = httpMock.expectOne('/api/auth/refresh');
+      refreshReq.flush({
+        token: 'new-refreshed-token',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
+    });
+
+    it('should handle refresh token failure', () => {
+      const originalToken = 'failing-token';
+      localStorage.setItem('auth_token', originalToken);
+      localStorage.setItem('auth_expires_at', new Date(Date.now() + 5 * 60 * 1000).toISOString());
+
+      service.refreshToken().subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(401);
+          // Should logout user on refresh failure
+          expect(service.isAuthenticated()).toBeFalsy();
+          expect(localStorage.getItem('auth_token')).toBeNull();
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/refresh');
+      req.flush({ error: { message: 'Invalid refresh token' } }, { status: 401, statusText: 'Unauthorized' });
+    });
+
+    it('should not refresh token if not near expiration', () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
+      localStorage.setItem('auth_token', 'valid-token');
+      localStorage.setItem('auth_expires_at', futureDate);
+
+      const newService = TestBed.inject(Auth);
+      
+      expect(newService.shouldRefreshToken()).toBeFalsy();
+    });
+
+    it('should refresh token when within refresh threshold', () => {
+      const nearExpiryDate = new Date(Date.now() + 14 * 60 * 1000).toISOString(); // 14 minutes from now (within 15-minute threshold)
+      localStorage.setItem('auth_token', 'token-to-refresh');
+      localStorage.setItem('auth_expires_at', nearExpiryDate);
+
+      const newService = TestBed.inject(Auth);
+      
+      expect(newService.shouldRefreshToken()).toBeTruthy();
+    });
+  });
+
+  describe('Session Management - Logout Functionality', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('should call logout endpoint on server', () => {
+      const token = 'logout-token';
+      localStorage.setItem('auth_token', token);
+
+      service.logout().subscribe(() => {
+        expect(service.isAuthenticated()).toBeFalsy();
+      });
+
+      const req = httpMock.expectOne('/api/auth/logout');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Authorization')).toBe(`Bearer ${token}`);
+      req.flush({ success: true });
+    });
+
+    it('should clear all authentication data on logout', () => {
+      // Setup authenticated state
+      localStorage.setItem('auth_token', 'token-to-clear');
+      localStorage.setItem('auth_user', JSON.stringify({ id: 1, name: 'Test User' }));
+      localStorage.setItem('auth_expires_at', new Date().toISOString());
+
+      service.logout().subscribe(() => {
+        // Verify all data is cleared
+        expect(localStorage.getItem('auth_token')).toBeNull();
+        expect(localStorage.getItem('auth_user')).toBeNull();
+        expect(localStorage.getItem('auth_expires_at')).toBeNull();
+        expect(service.isAuthenticated()).toBeFalsy();
+        expect(service.getCurrentUser()).toBeNull();
+        expect(service.getToken()).toBeNull();
+      });
+
+      const req = httpMock.expectOne('/api/auth/logout');
+      req.flush({ success: true });
+    });
+
+    it('should handle logout even if server request fails', () => {
+      localStorage.setItem('auth_token', 'token-to-clear');
+      localStorage.setItem('auth_user', JSON.stringify({ id: 1, name: 'Test User' }));
+
+      service.logout().subscribe(() => {
+        // Should still clear local data even if server request fails
+        expect(localStorage.getItem('auth_token')).toBeNull();
+        expect(service.isAuthenticated()).toBeFalsy();
+      });
+
+      const req = httpMock.expectOne('/api/auth/logout');
+      req.flush({ error: 'Server error' }, { status: 500, statusText: 'Internal Server Error' });
+    });
+
+    it('should emit authentication state change on logout', () => {
+      let authStateChanges: boolean[] = [];
+      
+      service.isAuthenticated$.subscribe(isAuth => {
+        authStateChanges.push(isAuth);
+      });
+
+      // Setup authenticated state
+      localStorage.setItem('auth_token', 'token');
+      const newService = TestBed.inject(Auth);
+
+      newService.logout().subscribe(() => {
+        expect(authStateChanges).toContain(true);  // Initial authenticated state
+        expect(authStateChanges[authStateChanges.length - 1]).toBeFalsy(); // After logout
+      });
+
+      const req = httpMock.expectOne('/api/auth/logout');
+      req.flush({ success: true });
+    });
+
+    it('should clear session storage as well as local storage', () => {
+      // Setup data in both storages
+      localStorage.setItem('auth_token', 'local-token');
+      sessionStorage.setItem('temp_auth_data', 'temp-data');
+
+      service.logout().subscribe(() => {
+        expect(localStorage.getItem('auth_token')).toBeNull();
+        expect(sessionStorage.getItem('temp_auth_data')).toBeNull();
+      });
+
+      const req = httpMock.expectOne('/api/auth/logout');
+      req.flush({ success: true });
+    });
+  });
 });
