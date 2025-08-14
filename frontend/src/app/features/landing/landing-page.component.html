@@ -1,64 +1,99 @@
-<div class="landing-page">
-  <h1>Welcome to Garage Inventory Management</h1>
-  <p>Manage your garage inventory efficiently</p>
+<!-- Skip navigation link for screen readers -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<main id="main-content" class="landing-page" role="main" aria-labelledby="page-title">
+  <!-- Page header with proper heading hierarchy -->
+  <header class="page-header">
+    <h1 id="page-title">Welcome to Garage Inventory Management</h1>
+    <p class="tagline" role="doc-subtitle">Manage your garage inventory efficiently</p>
+  </header>
   
-  <div class="features">
-    <mat-card class="feature-item">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>inventory_2</mat-icon>
-        <mat-card-title>Inventory Management</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Track all your garage items with ease</p>
-      </mat-card-content>
-    </mat-card>
-    <mat-card class="feature-item">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>location_on</mat-icon>
-        <mat-card-title>Location Tracking</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Know exactly where each item is stored</p>
-      </mat-card-content>
-    </mat-card>
-    <mat-card class="feature-item">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>category</mat-icon>
-        <mat-card-title>Item Categorization</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Organize items by category for quick access</p>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <!-- Features section with proper semantic structure -->
+  <section class="features" aria-labelledby="features-heading">
+    <h2 id="features-heading" class="sr-only">Key Features</h2>
+    <div class="features-grid" role="list">
+      <article class="feature-item" role="listitem">
+        <mat-card>
+          <mat-card-header>
+            <mat-icon 
+              mat-card-avatar 
+              aria-label="Inventory management icon"
+              role="img">inventory_2</mat-icon>
+            <mat-card-title>
+              <h3>Inventory Management</h3>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Track all your garage items with ease</p>
+          </mat-card-content>
+        </mat-card>
+      </article>
+      
+      <article class="feature-item" role="listitem">
+        <mat-card>
+          <mat-card-header>
+            <mat-icon 
+              mat-card-avatar 
+              aria-label="Location tracking icon"
+              role="img">location_on</mat-icon>
+            <mat-card-title>
+              <h3>Location Tracking</h3>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Know exactly where each item is stored</p>
+          </mat-card-content>
+        </mat-card>
+      </article>
+      
+      <article class="feature-item" role="listitem">
+        <mat-card>
+          <mat-card-header>
+            <mat-icon 
+              mat-card-avatar 
+              aria-label="Item categorization icon"
+              role="img">category</mat-icon>
+            <mat-card-title>
+              <h3>Item Categorization</h3>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Organize items by category for quick access</p>
+          </mat-card-content>
+        </mat-card>
+      </article>
+    </div>
+  </section>
   
-  <div class="cta-buttons">
-    <button 
-      type="button"
-      role="button"
-      data-testid="login"
-      aria-label="Navigate to login page"
-      aria-describedby="login-description"
-      mat-raised-button
-      color="primary"
-      (click)="navigateToLogin()"
-      (keydown)="onKeyDown($event, 'login')">
-      Login
-    </button>
-    <span id="login-description" class="sr-only">Access your garage inventory account</span>
-    
-    <button 
-      type="button"
-      role="button"
-      data-testid="register"
-      aria-label="Navigate to register page"
-      aria-describedby="register-description"
-      mat-raised-button
-      color="accent"
-      (click)="navigateToRegister()"
-      (keydown)="onKeyDown($event, 'register')">
-      Register
-    </button>
-    <span id="register-description" class="sr-only">Create a new garage inventory account</span>
-  </div>
-</div>
+  <!-- Call-to-action section -->
+  <section class="cta-section" aria-labelledby="cta-heading">
+    <h2 id="cta-heading" class="sr-only">Get Started</h2>
+    <div class="cta-buttons" role="group" aria-label="Account actions">
+      <button 
+        type="button"
+        data-testid="login"
+        aria-label="Navigate to login page"
+        aria-describedby="login-description"
+        mat-raised-button
+        color="primary"
+        (click)="navigateToLogin()"
+        (keydown)="onKeyDown($event, 'login')">
+        Login
+      </button>
+      <span id="login-description" class="sr-only">Access your garage inventory account</span>
+      
+      <button 
+        type="button"
+        data-testid="register"
+        aria-label="Navigate to register page"
+        aria-describedby="register-description"
+        mat-raised-button
+        color="accent"
+        (click)="navigateToRegister()"
+        (keydown)="onKeyDown($event, 'register')">
+        Register
+      </button>
+      <span id="register-description" class="sr-only">Create a new garage inventory account</span>
+    </div>
+  </section>
+</main>
