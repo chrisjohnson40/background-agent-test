@@ -819,4 +819,620 @@ public class AuthServiceTests
     }
 
     #endregion Login Tests
+
+    #region Session Management Tests
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithValidToken_ShouldReturnTrue()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "testuser",
+            Email = "test@example.com",
+            IsActive = true
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            IsActive = user.IsActive
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        // Act
+        var result = await _authService.ValidateTokenAsync(validToken);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithExpiredToken_ShouldReturnFalse()
+    {
+        // Arrange
+        var expiredToken = "expired.jwt.token";
+
+        // Act
+        var result = await _authService.ValidateTokenAsync(expiredToken);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithInvalidToken_ShouldReturnFalse()
+    {
+        // Arrange
+        var invalidToken = "invalid.token.format";
+
+        // Act
+        var result = await _authService.ValidateTokenAsync(invalidToken);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithNullToken_ShouldReturnFalse()
+    {
+        // Act
+        var result = await _authService.ValidateTokenAsync(null!);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithEmptyToken_ShouldReturnFalse()
+    {
+        // Act
+        var result = await _authService.ValidateTokenAsync(string.Empty);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetUserFromTokenAsync_WithValidToken_ShouldReturnUser()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "tokenuser",
+            Email = "token@example.com",
+            FirstName = "Token",
+            LastName = "User",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}",
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        var result = await _authService.GetUserFromTokenAsync(validToken);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(user.Id);
+        result.Username.Should().Be(user.Username);
+        result.Email.Should().Be(user.Email);
+        result.FirstName.Should().Be(user.FirstName);
+        result.LastName.Should().Be(user.LastName);
+        result.IsActive.Should().Be(user.IsActive);
+    }
+
+    [Fact]
+    public async Task GetUserFromTokenAsync_WithInvalidToken_ShouldReturnNull()
+    {
+        // Arrange
+        var invalidToken = "invalid.token.format";
+
+        // Act
+        var result = await _authService.GetUserFromTokenAsync(invalidToken);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetUserFromTokenAsync_WithExpiredToken_ShouldReturnNull()
+    {
+        // Arrange
+        var expiredToken = "expired.jwt.token";
+
+        // Act
+        var result = await _authService.GetUserFromTokenAsync(expiredToken);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetUserFromTokenAsync_WithValidTokenButInactiveUser_ShouldReturnNull()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "inactiveuser",
+            Email = "inactive@example.com",
+            IsActive = false
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            IsActive = true // Token was issued when user was active
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        var result = await _authService.GetUserFromTokenAsync(validToken);
+
+        // Assert
+        result.Should().BeNull(); // Should return null because user is now inactive
+    }
+
+    [Fact]
+    public void GenerateToken_WithValidUser_ShouldReturnValidJwtToken()
+    {
+        // Arrange
+        var userDto = new UserDto
+        {
+            Id = Guid.NewGuid(),
+            Username = "testuser",
+            Email = "test@example.com",
+            FirstName = "Test",
+            LastName = "User",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Act
+        var token = _authService.GenerateToken(userDto);
+
+        // Assert
+        token.Should().NotBeNullOrEmpty();
+        token.Split('.').Should().HaveCount(3); // JWT has 3 parts separated by dots
+        
+        // Token should be valid
+        var isValid = _authService.ValidateTokenAsync(token).Result;
+        isValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void GenerateToken_WithNullUser_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() => 
+            _authService.GenerateToken(null!));
+        
+        exception.ParamName.Should().Be("user");
+    }
+
+    [Fact]
+    public void GenerateToken_ShouldIncludeUserClaimsInToken()
+    {
+        // Arrange
+        var userDto = new UserDto
+        {
+            Id = Guid.NewGuid(),
+            Username = "claimsuser",
+            Email = "claims@example.com",
+            FirstName = "Claims",
+            LastName = "User",
+            IsActive = true
+        };
+
+        // Act
+        var token = _authService.GenerateToken(userDto);
+
+        // Assert
+        token.Should().NotBeNullOrEmpty();
+        
+        // Verify user can be extracted from token
+        var extractedUser = _authService.GetUserFromTokenAsync(token).Result;
+        extractedUser.Should().NotBeNull();
+        extractedUser!.Id.Should().Be(userDto.Id);
+        extractedUser.Username.Should().Be(userDto.Username);
+        extractedUser.Email.Should().Be(userDto.Email);
+    }
+
+    [Fact]
+    public void GenerateToken_ShouldCreateUniqueTokensForSameUser()
+    {
+        // Arrange
+        var userDto = new UserDto
+        {
+            Id = Guid.NewGuid(),
+            Username = "uniqueuser",
+            Email = "unique@example.com",
+            IsActive = true
+        };
+
+        // Act
+        var token1 = _authService.GenerateToken(userDto);
+        var token2 = _authService.GenerateToken(userDto);
+
+        // Assert
+        token1.Should().NotBe(token2); // Tokens should be unique due to timestamp/nonce
+    }
+
+    [Fact]
+    public void GenerateToken_ShouldSetExpirationTime()
+    {
+        // Arrange
+        var userDto = new UserDto
+        {
+            Id = Guid.NewGuid(),
+            Username = "expiryuser",
+            Email = "expiry@example.com",
+            IsActive = true
+        };
+
+        var beforeGeneration = DateTime.UtcNow;
+
+        // Act
+        var token = _authService.GenerateToken(userDto);
+
+        // Assert
+        token.Should().NotBeNullOrEmpty();
+        
+        // Token should be valid now
+        var isValidNow = _authService.ValidateTokenAsync(token).Result;
+        isValidNow.Should().BeTrue();
+        
+        // Token should have reasonable expiration (not expired immediately)
+        var afterGeneration = DateTime.UtcNow;
+        var timeDiff = afterGeneration - beforeGeneration;
+        timeDiff.Should().BeLessThan(TimeSpan.FromSeconds(1)); // Generation should be fast
+    }
+
+    #endregion Session Management Tests
+
+    #region Token Refresh Tests
+
+    [Fact]
+    public async Task RefreshTokenAsync_WithValidToken_ShouldReturnNewToken()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "refreshuser",
+            Email = "refresh@example.com",
+            FirstName = "Refresh",
+            LastName = "User",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}",
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+
+        var originalToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        var result = await _authService.RefreshTokenAsync(originalToken);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Token.Should().NotBeNullOrEmpty();
+        result.Token.Should().NotBe(originalToken); // Should be a new token
+        result.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+        result.User.Should().NotBeNull();
+        result.User.Id.Should().Be(user.Id);
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_WithInvalidToken_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var invalidToken = "invalid.token.format";
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            _authService.RefreshTokenAsync(invalidToken));
+        
+        exception.Message.Should().Contain("Invalid token");
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_WithExpiredToken_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var expiredToken = "expired.jwt.token";
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            _authService.RefreshTokenAsync(expiredToken));
+        
+        exception.Message.Should().Contain("Token expired");
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_WithInactiveUser_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "inactiveuser",
+            Email = "inactive@example.com",
+            IsActive = false // User is now inactive
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            IsActive = true // Token was issued when user was active
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            _authService.RefreshTokenAsync(validToken));
+        
+        exception.Message.Should().Contain("User account is inactive");
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_WithNonExistentUser_ShouldThrowUnauthorizedAccessException()
+    {
+        // Arrange
+        var userDto = new UserDto
+        {
+            Id = Guid.NewGuid(),
+            Username = "nonexistentuser",
+            Email = "nonexistent@example.com",
+            IsActive = true
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userDto.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => 
+            _authService.RefreshTokenAsync(validToken));
+        
+        exception.Message.Should().Contain("User not found");
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_ShouldUpdateLastLoginTime()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "loginuser",
+            Email = "login@example.com",
+            FirstName = "Login",
+            LastName = "User",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow.AddDays(-30),
+            LastLoginAt = DateTime.UtcNow.AddHours(-2)
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        };
+
+        var originalToken = _authService.GenerateToken(userDto);
+        var beforeRefresh = DateTime.UtcNow;
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Callback<User, CancellationToken>((u, _) => user.LastLoginAt = u.LastLoginAt)
+            .Returns(Task.CompletedTask);
+
+        _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
+        var result = await _authService.RefreshTokenAsync(originalToken);
+        var afterRefresh = DateTime.UtcNow;
+
+        // Assert
+        result.User.LastLoginAt.Should().NotBeNull();
+        result.User.LastLoginAt.Should().BeAfter(beforeRefresh.AddSeconds(-1));
+        result.User.LastLoginAt.Should().BeBefore(afterRefresh.AddSeconds(1));
+        
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion Token Refresh Tests
+
+    #region Logout Tests
+
+    [Fact]
+    public async Task LogoutAsync_WithValidToken_ShouldInvalidateToken()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "logoutuser",
+            Email = "logout@example.com",
+            IsActive = true
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            IsActive = user.IsActive
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        await _authService.LogoutAsync(validToken);
+
+        // Assert
+        // After logout, token should be invalid
+        var isTokenValid = await _authService.ValidateTokenAsync(validToken);
+        isTokenValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LogoutAsync_WithInvalidToken_ShouldNotThrowException()
+    {
+        // Arrange
+        var invalidToken = "invalid.token.format";
+
+        // Act & Assert
+        // Should not throw exception, just handle gracefully
+        await _authService.LogoutAsync(invalidToken);
+    }
+
+    [Fact]
+    public async Task LogoutAsync_WithNullToken_ShouldNotThrowException()
+    {
+        // Act & Assert
+        // Should not throw exception, just handle gracefully
+        await _authService.LogoutAsync(null!);
+    }
+
+    [Fact]
+    public async Task LogoutAsync_WithEmptyToken_ShouldNotThrowException()
+    {
+        // Act & Assert
+        // Should not throw exception, just handle gracefully
+        await _authService.LogoutAsync(string.Empty);
+    }
+
+    [Fact]
+    public async Task LogoutAsync_ShouldAddTokenToBlacklist()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "blacklistuser",
+            Email = "blacklist@example.com",
+            IsActive = true
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            IsActive = user.IsActive
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        await _authService.LogoutAsync(validToken);
+
+        // Assert
+        // Token should be blacklisted and therefore invalid
+        var isTokenValid = await _authService.ValidateTokenAsync(validToken);
+        isTokenValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LogoutAsync_ShouldClearUserSession()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Username = "sessionuser",
+            Email = "session@example.com",
+            IsActive = true,
+            LastLoginAt = DateTime.UtcNow
+        };
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            LastLoginAt = user.LastLoginAt
+        };
+
+        var validToken = _authService.GenerateToken(userDto);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        await _authService.LogoutAsync(validToken);
+
+        // Assert
+        // User should no longer be retrievable from the token
+        var userFromToken = await _authService.GetUserFromTokenAsync(validToken);
+        userFromToken.Should().BeNull();
+    }
+
+    #endregion Logout Tests
 }

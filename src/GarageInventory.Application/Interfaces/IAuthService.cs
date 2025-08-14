@@ -13,4 +13,8 @@ public interface IAuthService
     string GenerateToken(UserDto user);
     string HashPassword(string password);
     bool VerifyPassword(string password, string hash);
+    
+    // Session Management Methods
+    Task<LoginResponseDto> RefreshTokenAsync(string token, CancellationToken cancellationToken = default);
+    Task LogoutAsync(string token, CancellationToken cancellationToken = default);
 }
