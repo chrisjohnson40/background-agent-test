@@ -1,23 +1,48 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { RouterTestingModule } from '@angular/router/testing';
+import { Component } from '@angular/core';
 
 import { LandingPageComponent } from './landing-page.component';
+
+// Mock components for routing tests
+@Component({
+  template: '<div>Login Component</div>'
+})
+class MockLoginComponent { }
+
+@Component({
+  template: '<div>Register Component</div>'
+})
+class MockRegisterComponent { }
 
 describe('LandingPageComponent', () => {
   let component: LandingPageComponent;
   let fixture: ComponentFixture<LandingPageComponent>;
   let compiled: HTMLElement;
+  let router: Router;
+  let location: Location;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LandingPageComponent]
+      imports: [
+        LandingPageComponent,
+        RouterTestingModule.withRoutes([
+          { path: 'login', component: MockLoginComponent },
+          { path: 'register', component: MockRegisterComponent }
+        ])
+      ]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(LandingPageComponent);
     component = fixture.componentInstance;
     compiled = fixture.nativeElement;
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
     fixture.detectChanges();
   });
 
@@ -81,40 +106,40 @@ describe('LandingPageComponent', () => {
   });
 
   describe('Button Presence and Accessibility', () => {
-    it('should display "Get Started" button', () => {
-      const getStartedButton = compiled.querySelector('button[data-testid="get-started"]');
-      expect(getStartedButton).toBeTruthy();
-      expect(getStartedButton?.textContent?.trim()).toBe('Get Started');
+    it('should display "Login" button', () => {
+      const loginButton = compiled.querySelector('button[data-testid="login"]');
+      expect(loginButton).toBeTruthy();
+      expect(loginButton?.textContent?.trim()).toBe('Login');
     });
 
-    it('should display "Sign Up" button', () => {
-      const signUpButton = compiled.querySelector('button[data-testid="sign-up"]');
-      expect(signUpButton).toBeTruthy();
-      expect(signUpButton?.textContent?.trim()).toBe('Sign Up');
+    it('should display "Register" button', () => {
+      const registerButton = compiled.querySelector('button[data-testid="register"]');
+      expect(registerButton).toBeTruthy();
+      expect(registerButton?.textContent?.trim()).toBe('Register');
     });
 
-    it('should have "Get Started" button with appropriate ARIA label', () => {
-      const getStartedButton = compiled.querySelector('button[data-testid="get-started"]');
-      expect(getStartedButton).toBeTruthy();
-      expect(getStartedButton?.getAttribute('aria-label')).toBe('Get started with garage inventory management');
+    it('should have "Login" button with appropriate ARIA label', () => {
+      const loginButton = compiled.querySelector('button[data-testid="login"]');
+      expect(loginButton).toBeTruthy();
+      expect(loginButton?.getAttribute('aria-label')).toBe('Navigate to login page');
     });
 
-    it('should have "Sign Up" button with appropriate ARIA label', () => {
-      const signUpButton = compiled.querySelector('button[data-testid="sign-up"]');
-      expect(signUpButton).toBeTruthy();
-      expect(signUpButton?.getAttribute('aria-label')).toBe('Sign up for a new account');
+    it('should have "Register" button with appropriate ARIA label', () => {
+      const registerButton = compiled.querySelector('button[data-testid="register"]');
+      expect(registerButton).toBeTruthy();
+      expect(registerButton?.getAttribute('aria-label')).toBe('Navigate to register page');
     });
 
     it('should have both buttons present on the page', () => {
-      const getStartedButton = compiled.querySelector('button[data-testid="get-started"]');
-      const signUpButton = compiled.querySelector('button[data-testid="sign-up"]');
+      const loginButton = compiled.querySelector('button[data-testid="login"]');
+      const registerButton = compiled.querySelector('button[data-testid="register"]');
       
-      expect(getStartedButton).toBeTruthy();
-      expect(signUpButton).toBeTruthy();
+      expect(loginButton).toBeTruthy();
+      expect(registerButton).toBeTruthy();
     });
 
     it('should have buttons with proper accessibility attributes', () => {
-      const buttons = compiled.querySelectorAll('button[data-testid="get-started"], button[data-testid="sign-up"]');
+      const buttons = compiled.querySelectorAll('button[data-testid="login"], button[data-testid="register"]');
       expect(buttons.length).toBe(2);
       
       buttons.forEach(button => {
@@ -125,7 +150,7 @@ describe('LandingPageComponent', () => {
     });
 
     it('should have buttons that are keyboard accessible', () => {
-      const buttons = compiled.querySelectorAll('button[data-testid="get-started"], button[data-testid="sign-up"]');
+      const buttons = compiled.querySelectorAll('button[data-testid="login"], button[data-testid="register"]');
       
       buttons.forEach(button => {
         expect(button.tagName.toLowerCase()).toBe('button');
@@ -419,6 +444,73 @@ describe('LandingPageComponent', () => {
         expect(landingStyle.padding).toBeTruthy();
         expect(featuresStyle.gap).toBeTruthy();
         expect(buttonsStyle.gap).toBeTruthy();
+      });
+    });
+  });
+
+  describe('Routing Button Functionality', () => {
+    it('should display "Login" button', () => {
+      const loginButton = compiled.querySelector('button[data-testid="login"]');
+      expect(loginButton).toBeTruthy();
+      expect(loginButton?.textContent?.trim()).toBe('Login');
+    });
+
+    it('should display "Register" button', () => {
+      const registerButton = compiled.querySelector('button[data-testid="register"]');
+      expect(registerButton).toBeTruthy();
+      expect(registerButton?.textContent?.trim()).toBe('Register');
+    });
+
+    it('should navigate to /login when Login button is clicked', async () => {
+      const loginButton = compiled.querySelector('button[data-testid="login"]') as HTMLButtonElement;
+      expect(loginButton).toBeTruthy();
+
+      loginButton.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/login');
+    });
+
+    it('should navigate to /register when Register button is clicked', async () => {
+      const registerButton = compiled.querySelector('button[data-testid="register"]') as HTMLButtonElement;
+      expect(registerButton).toBeTruthy();
+
+      registerButton.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/register');
+    });
+
+    it('should have Login button with appropriate ARIA label', () => {
+      const loginButton = compiled.querySelector('button[data-testid="login"]');
+      expect(loginButton).toBeTruthy();
+      expect(loginButton?.getAttribute('aria-label')).toBe('Navigate to login page');
+    });
+
+    it('should have Register button with appropriate ARIA label', () => {
+      const registerButton = compiled.querySelector('button[data-testid="register"]');
+      expect(registerButton).toBeTruthy();
+      expect(registerButton?.getAttribute('aria-label')).toBe('Navigate to register page');
+    });
+
+    it('should have both routing buttons present on the page', () => {
+      const loginButton = compiled.querySelector('button[data-testid="login"]');
+      const registerButton = compiled.querySelector('button[data-testid="register"]');
+      
+      expect(loginButton).toBeTruthy();
+      expect(registerButton).toBeTruthy();
+    });
+
+    it('should have routing buttons with proper accessibility attributes', () => {
+      const buttons = compiled.querySelectorAll('button[data-testid="login"], button[data-testid="register"]');
+      expect(buttons.length).toBe(2);
+      
+      buttons.forEach(button => {
+        expect(button.getAttribute('type')).toBeTruthy();
+        expect(button.getAttribute('aria-label')).toBeTruthy();
+        expect(button.getAttribute('data-testid')).toBeTruthy();
       });
     });
   });
