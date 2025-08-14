@@ -1,0 +1,223 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    outline: none;
+
+    &:hover,
+    &:focus {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  .desktop-nav {
+    display: none;
+    align-items: center;
+    gap: 8px;
+
+    @media (min-width: 768px) {
+      display: flex;
+    }
+
+    button {
+      color: white;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      &.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        font-weight: 500;
+      }
+
+      &:focus {
+        outline: 2px solid rgba(255, 255, 255, 0.5);
+        outline-offset: 2px;
+      }
+    }
+
+    .user-menu-button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-transform: none;
+      
+      mat-icon:first-child {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+    color: white;
+
+    @media (min-width: 768px) {
+      display: none;
+    }
+
+    &:focus {
+      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  pointer-events: none;
+  
+  &.open {
+    pointer-events: all;
+  }
+
+  .mobile-menu-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    
+    .mobile-menu.open & {
+      opacity: 1;
+    }
+  }
+
+  .mobile-menu-content {
+    position: absolute;
+    top: 64px; // Height of toolbar
+    right: 0;
+    width: 280px;
+    max-width: 90vw;
+    background: white;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    padding: 16px 0;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+
+    .mobile-menu.open & {
+      transform: translateX(0);
+    }
+
+    .mobile-nav-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 12px 24px;
+      text-align: left;
+      border: none;
+      background: none;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.87);
+      transition: background-color 0.2s ease;
+      text-transform: none;
+      justify-content: flex-start;
+      gap: 16px;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+
+      &:focus {
+        background-color: rgba(0, 0, 0, 0.08);
+        outline: none;
+      }
+
+      &.active {
+        background-color: rgba(63, 81, 181, 0.08);
+        color: #3f51b5;
+        font-weight: 500;
+      }
+
+      &.logout {
+        color: #f44336;
+        
+        mat-icon {
+          color: #f44336;
+        }
+      }
+
+      mat-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 24px;
+        flex-shrink: 0;
+      }
+    }
+
+    mat-divider {
+      margin: 8px 0;
+    }
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+// Focus indicators for accessibility
+button:focus,
+[tabindex]:focus {
+  outline: 2px solid #3f51b5;
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .navbar {
+    border-bottom: 2px solid;
+  }
+  
+  .logo:focus,
+  button:focus {
+    outline: 3px solid;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-content,
+  .mobile-menu-backdrop,
+  .logo,
+  button {
+    transition: none;
+  }
+}
