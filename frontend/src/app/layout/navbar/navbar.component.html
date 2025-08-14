@@ -1,0 +1,223 @@
+<mat-toolbar color="primary" class="navbar">
+  <nav role="navigation" aria-label="Main navigation" class="navbar-container">
+    <!-- Logo -->
+    <div 
+      class="logo" 
+      data-testid="logo"
+      tabindex="0"
+      role="button"
+      aria-label="Navigate to home page"
+      (click)="navigateToHome()"
+      (keydown)="onLogoKeydown($event)">
+      Garage Inventory
+    </div>
+
+    <!-- Desktop Navigation -->
+    <div class="desktop-nav" [class.authenticated]="isAuthenticated">
+      <!-- Authenticated Navigation Links -->
+      <ng-container *ngIf="isAuthenticated">
+        <button 
+          mat-button 
+          data-testid="inventory-link"
+          [class.active]="isRouteActive('/inventory')"
+          (click)="navigateToInventory()">
+          Inventory
+        </button>
+        <button 
+          mat-button 
+          data-testid="locations-link"
+          [class.active]="isRouteActive('/locations')"
+          (click)="navigateToLocations()">
+          Locations
+        </button>
+        <button 
+          mat-button 
+          data-testid="categories-link"
+          [class.active]="isRouteActive('/categories')"
+          (click)="navigateToCategories()">
+          Categories
+        </button>
+        <button 
+          mat-button 
+          data-testid="reports-link"
+          [class.active]="isRouteActive('/reports')"
+          (click)="navigateToReports()">
+          Reports
+        </button>
+      </ng-container>
+
+      <!-- Non-authenticated Navigation Links -->
+      <ng-container *ngIf="!isAuthenticated">
+        <button 
+          mat-button 
+          data-testid="login-button"
+          (click)="navigateToLogin()">
+          Login
+        </button>
+        <button 
+          mat-raised-button 
+          color="accent"
+          data-testid="register-button"
+          (click)="navigateToRegister()">
+          Register
+        </button>
+      </ng-container>
+
+      <!-- User Menu (when authenticated) -->
+      <ng-container *ngIf="isAuthenticated && currentUser">
+        <button 
+          mat-button 
+          [matMenuTriggerFor]="userMenu"
+          data-testid="user-menu-button"
+          class="user-menu-button">
+          <mat-icon>account_circle</mat-icon>
+          {{ currentUser.name }}
+          <mat-icon>arrow_drop_down</mat-icon>
+        </button>
+        <mat-menu #userMenu="matMenu">
+          <button 
+            mat-menu-item 
+            data-testid="profile-menu-item"
+            (click)="navigateToProfile()">
+            <mat-icon>person</mat-icon>
+            Profile
+          </button>
+          <button 
+            mat-menu-item 
+            data-testid="settings-menu-item"
+            (click)="navigateToSettings()">
+            <mat-icon>settings</mat-icon>
+            Settings
+          </button>
+          <mat-divider></mat-divider>
+          <button 
+            mat-menu-item 
+            data-testid="logout-menu-item"
+            (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            Logout
+          </button>
+        </mat-menu>
+      </ng-container>
+    </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button 
+      mat-icon-button 
+      class="mobile-menu-toggle"
+      data-testid="mobile-menu-toggle"
+      aria-label="Toggle navigation menu"
+      [attr.aria-expanded]="isMobileMenuOpen"
+      (click)="toggleMobileMenu()">
+      <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  </nav>
+</mat-toolbar>
+
+<!-- Mobile Menu -->
+<div 
+  class="mobile-menu"
+  data-testid="mobile-menu"
+  [class.open]="isMobileMenuOpen"
+  [attr.aria-hidden]="!isMobileMenuOpen">
+  
+  <!-- Mobile Menu Backdrop -->
+  <div 
+    class="mobile-menu-backdrop"
+    data-testid="mobile-menu-backdrop"
+    *ngIf="isMobileMenuOpen"
+    (click)="closeMobileMenu()">
+  </div>
+
+  <!-- Mobile Menu Content -->
+  <div class="mobile-menu-content" *ngIf="isMobileMenuOpen">
+    <!-- Authenticated Mobile Navigation -->
+    <ng-container *ngIf="isAuthenticated">
+      <button 
+        mat-button 
+        data-testid="inventory-link"
+        [class.active]="isRouteActive('/inventory')"
+        (click)="navigateToInventory()"
+        class="mobile-nav-item">
+        <mat-icon>inventory</mat-icon>
+        Inventory
+      </button>
+      <button 
+        mat-button 
+        data-testid="locations-link"
+        [class.active]="isRouteActive('/locations')"
+        (click)="navigateToLocations()"
+        class="mobile-nav-item">
+        <mat-icon>location_on</mat-icon>
+        Locations
+      </button>
+      <button 
+        mat-button 
+        data-testid="categories-link"
+        [class.active]="isRouteActive('/categories')"
+        (click)="navigateToCategories()"
+        class="mobile-nav-item">
+        <mat-icon>category</mat-icon>
+        Categories
+      </button>
+      <button 
+        mat-button 
+        data-testid="reports-link"
+        [class.active]="isRouteActive('/reports')"
+        (click)="navigateToReports()"
+        class="mobile-nav-item">
+        <mat-icon>assessment</mat-icon>
+        Reports
+      </button>
+      
+      <mat-divider></mat-divider>
+      
+      <!-- User Actions in Mobile -->
+      <button 
+        mat-button 
+        data-testid="profile-menu-item"
+        (click)="navigateToProfile()"
+        class="mobile-nav-item">
+        <mat-icon>person</mat-icon>
+        Profile
+      </button>
+      <button 
+        mat-button 
+        data-testid="settings-menu-item"
+        (click)="navigateToSettings()"
+        class="mobile-nav-item">
+        <mat-icon>settings</mat-icon>
+        Settings
+      </button>
+      <button 
+        mat-button 
+        data-testid="logout-menu-item"
+        (click)="logout()"
+        class="mobile-nav-item logout">
+        <mat-icon>logout</mat-icon>
+        Logout
+      </button>
+    </ng-container>
+
+    <!-- Non-authenticated Mobile Navigation -->
+    <ng-container *ngIf="!isAuthenticated">
+      <button 
+        mat-button 
+        data-testid="login-button"
+        (click)="navigateToLogin()"
+        class="mobile-nav-item">
+        <mat-icon>login</mat-icon>
+        Login
+      </button>
+      <button 
+        mat-raised-button 
+        color="accent"
+        data-testid="register-button"
+        (click)="navigateToRegister()"
+        class="mobile-nav-item">
+        <mat-icon>person_add</mat-icon>
+        Register
+      </button>
+    </ng-container>
+  </div>
+</div>
