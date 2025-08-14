@@ -20,22 +20,30 @@
   <div class="cta-buttons">
     <button 
       type="button"
+      role="button"
       data-testid="login"
       aria-label="Navigate to login page"
+      aria-describedby="login-description"
       mat-raised-button
       color="primary"
-      (click)="navigateToLogin()">
+      (click)="navigateToLogin()"
+      (keydown)="onKeyDown($event, 'login')">
       Login
     </button>
+    <span id="login-description" class="sr-only">Access your garage inventory account</span>
     
     <button 
       type="button"
+      role="button"
       data-testid="register"
       aria-label="Navigate to register page"
+      aria-describedby="register-description"
       mat-raised-button
       color="accent"
-      (click)="navigateToRegister()">
+      (click)="navigateToRegister()"
+      (keydown)="onKeyDown($event, 'register')">
       Register
     </button>
+    <span id="register-description" class="sr-only">Create a new garage inventory account</span>
   </div>
 </div>

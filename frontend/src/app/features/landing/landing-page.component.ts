@@ -20,4 +20,16 @@ export class LandingPageComponent {
   navigateToRegister(): void {
     this.router.navigate(['/register']);
   }
+
+  onKeyDown(event: KeyboardEvent, action: 'login' | 'register'): void {
+    // Handle Enter and Space key presses for accessibility
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (action === 'login') {
+        this.navigateToLogin();
+      } else if (action === 'register') {
+        this.navigateToRegister();
+      }
+    }
+  }
 }
