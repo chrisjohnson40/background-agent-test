@@ -1,8 +1,14 @@
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 64px;
+  background-color: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  box-shadow: var(--mat-sys-elevation-level2);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
 
   .navbar-container {
     display: flex;
@@ -11,82 +17,128 @@
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 24px;
+    height: 100%;
+
+    @media (max-width: 768px) {
+      padding: 0 16px;
+    }
   }
 
   .logo {
     font-size: 1.5rem;
     font-weight: 600;
     cursor: pointer;
-    color: white;
+    color: var(--mat-sys-on-primary);
     text-decoration: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
+    padding: 12px 16px;
+    border-radius: var(--mat-sys-corner-medium);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
+    letter-spacing: 0.5px;
 
     &:hover,
     &:focus {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      transform: translateY(-1px);
     }
 
     &:focus {
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+      outline: 2px solid var(--mat-sys-on-primary);
+      outline-offset: 2px;
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 
   .desktop-nav {
     display: none;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
 
     @media (min-width: 768px) {
       display: flex;
     }
 
     button {
-      color: white;
-      border-radius: 4px;
-      transition: all 0.2s ease;
+      color: var(--mat-sys-on-primary);
+      border-radius: var(--mat-sys-corner-medium);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 8px 16px;
+      font-weight: 500;
+      letter-spacing: 0.25px;
+      min-height: 40px;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+        transform: translateY(-1px);
+        box-shadow: var(--mat-sys-elevation-level1);
       }
 
       &.active {
-        background-color: rgba(255, 255, 255, 0.2);
-        font-weight: 500;
+        background-color: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-secondary-container);
+        font-weight: 600;
+        box-shadow: var(--mat-sys-elevation-level1);
       }
 
       &:focus {
-        outline: 2px solid rgba(255, 255, 255, 0.5);
+        outline: 2px solid var(--mat-sys-on-primary);
         outline-offset: 2px;
+      }
+
+      &:active {
+        transform: translateY(0);
       }
     }
 
     .user-menu-button {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
       text-transform: none;
+      padding: 8px 12px;
       
       mat-icon:first-child {
-        margin-right: 4px;
+        margin-right: 0;
+      }
+
+      mat-icon:last-child {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
       }
     }
   }
 
   .mobile-menu-toggle {
     display: flex;
-    color: white;
+    color: var(--mat-sys-on-primary);
+    border-radius: var(--mat-sys-corner-medium);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px;
 
     @media (min-width: 768px) {
       display: none;
     }
 
+    &:hover {
+      background-color: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      transform: scale(1.05);
+    }
+
     &:focus {
-      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline: 2px solid var(--mat-sys-on-primary);
       outline-offset: 2px;
+    }
+
+    &:active {
+      transform: scale(0.95);
     }
   }
 }
@@ -110,12 +162,13 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--mat-sys-scrim);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(4px);
     
     .mobile-menu.open & {
-      opacity: 1;
+      opacity: 0.6;
     }
   }
 
@@ -123,15 +176,18 @@
     position: absolute;
     top: 64px; // Height of toolbar
     right: 0;
-    width: 280px;
+    width: 320px;
     max-width: 90vw;
-    background: white;
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+    background: var(--mat-sys-surface-container);
+    color: var(--mat-sys-on-surface);
+    box-shadow: var(--mat-sys-elevation-level3);
+    border-radius: var(--mat-sys-corner-large) 0 0 var(--mat-sys-corner-large);
     transform: translateX(100%);
-    transition: transform 0.3s ease;
-    padding: 16px 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 24px 0;
     max-height: calc(100vh - 64px);
     overflow-y: auto;
+    border-left: 1px solid var(--mat-sys-outline-variant);
 
     .mobile-menu.open & {
       transform: translateX(0);
@@ -141,37 +197,55 @@
       display: flex;
       align-items: center;
       width: 100%;
-      padding: 12px 24px;
+      padding: 16px 24px;
       text-align: left;
       border: none;
       background: none;
       font-size: 16px;
-      color: rgba(0, 0, 0, 0.87);
-      transition: background-color 0.2s ease;
+      color: var(--mat-sys-on-surface);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       text-transform: none;
       justify-content: flex-start;
       gap: 16px;
+      font-weight: 500;
+      border-radius: 0 var(--mat-sys-corner-large) var(--mat-sys-corner-large) 0;
+      margin: 2px 0;
 
       &:hover {
-        background-color: rgba(0, 0, 0, 0.04);
+        background-color: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-secondary-container);
+        transform: translateX(-4px);
       }
 
       &:focus {
-        background-color: rgba(0, 0, 0, 0.08);
-        outline: none;
+        background-color: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-secondary-container);
+        outline: 2px solid var(--mat-sys-primary);
+        outline-offset: -2px;
       }
 
       &.active {
-        background-color: rgba(63, 81, 181, 0.08);
-        color: #3f51b5;
-        font-weight: 500;
+        background-color: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+        font-weight: 600;
+        transform: translateX(-4px);
+        
+        mat-icon {
+          color: var(--mat-sys-primary);
+        }
       }
 
       &.logout {
-        color: #f44336;
+        color: var(--mat-sys-error);
+        
+        &:hover,
+        &:focus {
+          background-color: var(--mat-sys-error-container);
+          color: var(--mat-sys-on-error-container);
+        }
         
         mat-icon {
-          color: #f44336;
+          color: var(--mat-sys-error);
         }
       }
 
@@ -184,7 +258,8 @@
     }
 
     mat-divider {
-      margin: 8px 0;
+      margin: 16px 0;
+      background-color: var(--mat-sys-outline-variant);
     }
   }
 
@@ -193,22 +268,25 @@
   }
 }
 
+// Note: Body padding for fixed navbar is handled in global styles
+
 // Focus indicators for accessibility
 button:focus,
 [tabindex]:focus {
-  outline: 2px solid #3f51b5;
+  outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
 }
 
 // High contrast mode support
 @media (prefers-contrast: high) {
   .navbar {
-    border-bottom: 2px solid;
+    border-bottom: 3px solid currentColor;
   }
   
   .logo:focus,
   button:focus {
-    outline: 3px solid;
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
   }
 }
 
@@ -217,7 +295,42 @@ button:focus,
   .mobile-menu-content,
   .mobile-menu-backdrop,
   .logo,
-  button {
-    transition: none;
+  button,
+  .mobile-nav-item {
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .navbar button:hover,
+  .mobile-nav-item:hover {
+    transform: none !important;
+  }
+}
+
+// Enhanced responsive design
+@media (max-width: 480px) {
+  .navbar {
+    .navbar-container {
+      padding: 0 12px;
+    }
+    
+    .logo {
+      font-size: 1.25rem;
+      padding: 8px 12px;
+    }
+  }
+  
+  .mobile-menu-content {
+    width: 100%;
+    max-width: 100vw;
+    border-radius: 0;
+    border-left: none;
+  }
+}
+
+// Dark theme support (if implemented)
+@media (prefers-color-scheme: dark) {
+  .navbar {
+    border-bottom-color: var(--mat-sys-outline);
   }
 }
