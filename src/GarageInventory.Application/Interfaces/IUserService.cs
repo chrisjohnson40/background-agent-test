@@ -15,4 +15,5 @@ public interface IUserService
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default);
     Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default);
+    Task<bool> ChangePasswordAsync(Guid id, ChangePasswordDto changePasswordDto, CancellationToken cancellationToken = default);
 }
